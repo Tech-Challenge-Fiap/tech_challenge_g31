@@ -1,0 +1,26 @@
+version: '3'
+services:
+  db:
+    image: postgres:13  # Use uma imagem oficial do PostgreSQL
+    environment:
+      POSTGRES_DB: myappdb  # Nome do banco de dados
+      POSTGRES_USER: myappuser  # Nome de usuário do banco de dados
+      POSTGRES_PASSWORD: myapppassword  # Senha do banco de dados
+    ports:
+      - "5432:5432"  # Mapeie a porta do PostgreSQL do contêiner para a porta do host
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Nome do seu Dockerfile de desenvolvimento
+    ports:
+      - "5000:5000"  # Mapeamento da porta do contêiner para a porta do host
+    volumes:
+      - .:/app  # Mapeamento do diretório local para o diretório de trabalho no contêiner
+    environment:
+      POSTGRES_DB: myappdb  # Nome do banco de dados
+      POSTGRES_USER: myappuser  # Nome de usuário do banco de dados
+      POSTGRES_PASSWORD: myapppassword  # Senha do banco de dados
+      POSTGRES_HOST: db  # Senha do banco de dados
+      FLASK_ENV: development  # Configuração da variável de ambiente FLASK_ENV
+    depends_on:
+      - db  # Aguarde o serviço do banco de dados PostgreSQL
