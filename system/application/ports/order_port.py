@@ -5,7 +5,8 @@ from system.application.dto.requests.order_request import CreateOrderRequest
 
 from system.domain.entities.order import OrderEntity
 
-class OrderPort():
+
+class OrderPort:
     @classmethod
     @abstractmethod
     def create_order(payload: CreateOrderRequest) -> OrderEntity:
@@ -19,14 +20,14 @@ class OrderPort():
         """
         Method thar gets all orders by status
         """
-    
+
     @classmethod
     @abstractmethod
     def get_order_by_id(order_id) -> OrderEntity:
         """
         Get a order by it's id
         """
-    
+
     @classmethod
     @abstractmethod
     def patch_order(order_id) -> OrderEntity:

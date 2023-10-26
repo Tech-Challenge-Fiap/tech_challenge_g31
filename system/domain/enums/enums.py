@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class OrderStatusEnum(Enum):
     RECIEVED = "RECIEVED"
     PREPARING = "PREPARING"
