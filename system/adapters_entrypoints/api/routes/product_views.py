@@ -67,7 +67,6 @@ def get_products_by_type(product_type):
         products_list.append(vars(product))
     return products_list
 
-
 @app.route("/delete_product/<product_id>", methods=["DELETE"])
 def delete_product(product_id):
     try:
