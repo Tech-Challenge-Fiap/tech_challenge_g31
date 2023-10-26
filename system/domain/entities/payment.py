@@ -5,10 +5,10 @@ from system.domain.enums.enums import PaymentStatusEnum
 
 
 class PaymentEntity(BaseModel):
-    payment_id: Optional[int]
+    id: Optional[int] = None
     qr_code: str
-    payed_at: datetime = datetime.now()
-    status: PaymentStatusEnum = PaymentStatusEnum.UNPAID
+    payed_at: Optional[datetime] = None
+    status: str = PaymentStatusEnum.UNPAID.value
 
     class Config:
         from_attributes = True

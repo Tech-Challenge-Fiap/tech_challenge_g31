@@ -4,14 +4,15 @@ from system.application.dto.requests.client_request import ClientPayload
 
 from system.domain.entities.client import ClientEntity
 
-class ClientPort():
+
+class ClientPort:
     @classmethod
     @abstractmethod
     def create_client(payload: ClientPayload) -> ClientEntity:
         """
         Method that creates a client
         """
-    
+
     @classmethod
     @abstractmethod
     def get_client_by_cpf(cpf) -> ClientEntity:

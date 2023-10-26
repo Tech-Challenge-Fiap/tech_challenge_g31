@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class ClientPayload(BaseModel):
     cpf: str
     name: str
@@ -7,6 +8,7 @@ class ClientPayload(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class CreateClientRequest(ClientPayload):
     pass

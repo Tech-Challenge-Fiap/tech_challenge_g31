@@ -6,6 +6,7 @@ class OrderAlreadyExistsError(Exception):
     ):
         super().__init__(msg, *args)
 
+
 class OrderDoesNotExistError(Exception):
     def __init__(  # noqa: WPS612
         self,
@@ -13,6 +14,7 @@ class OrderDoesNotExistError(Exception):
         *args: object,
     ):
         super().__init__(msg, *args)
+
 
 class OrderUpdateError(Exception):
     def __init__(  # noqa: WPS612
