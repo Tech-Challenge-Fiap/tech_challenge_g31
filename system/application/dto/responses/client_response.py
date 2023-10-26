@@ -1,6 +1,7 @@
 from typing import List
 from flask import Response
 
+
 class ClientResponse(Response):
     cpf: str
     name: str
@@ -9,11 +10,14 @@ class ClientResponse(Response):
     class Config:
         from_attributes = True
 
+
 class CreateClientResponse(ClientResponse):
     pass
 
+
 class GetClientByCPFResponse(ClientResponse):
     pass
+
 
 class GetAllClientsResponse(ClientResponse):
     clients: List[ClientResponse]

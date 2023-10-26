@@ -5,7 +5,8 @@ from system.domain.enums.enums import ProductTypeEnum
 
 from system.domain.entities.product import ProductEntity
 
-class ProductPort():
+
+class ProductPort:
     @classmethod
     @abstractmethod
     def create_product(payload: CreateProductRequest) -> ProductEntity:

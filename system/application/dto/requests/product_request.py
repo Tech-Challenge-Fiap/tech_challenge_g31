@@ -1,10 +1,10 @@
 from typing import Optional
 from pydantic import BaseModel
 
-from system.domain.enums.enums import ProductTypeEnum
+
 
 class ProductPayload(BaseModel):
-    type: ProductTypeEnum
+    type: str
     name: str
     price: float
     prep_time: int
@@ -14,11 +14,13 @@ class ProductPayload(BaseModel):
     class Config:
         from_attributes = True
 
+
 class CreateProductRequest(ProductPayload):
     pass
 
+
 class UpdateProductRequest(BaseModel):
-    type: Optional[ProductTypeEnum] = None
+    type: Optional[str] = None
     name: Optional[str] = None
     price: Optional[float] = None
     prep_time: Optional[int] = None
