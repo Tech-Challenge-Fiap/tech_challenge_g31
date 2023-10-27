@@ -30,7 +30,7 @@ class ProductPort:
 
     @classmethod
     @abstractmethod
-    def get_products() -> List[ProductEntity]:
+    def get_all_products() -> List[ProductEntity]:
         """
         Method that gets all products
         """

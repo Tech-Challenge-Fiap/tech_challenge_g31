@@ -1,5 +1,6 @@
 from typing import List
 from sqlalchemy.exc import IntegrityError
+from system.application.ports.order_port import OrderPort
 from system.domain.entities.order import OrderEntity
 from system.infrastructure.adapters.database.exceptions.order_exceptions import (
     OrderDoesNotExistError,
@@ -13,10 +14,10 @@ from system.infrastructure.adapters.database.models.order_product_model import (
 from system.infrastructure.adapters.database.models.product_model import ProductModel
 
 
-class OrderRepository:
-    @staticmethod
-    def create_order(order: OrderEntity) -> OrderEntity:
-        """Create order"""
+class OrderRepository(OrderPort):
+    @classmethod
+    def create_order(cls, order: OrderEntity) -> OrderEntity:
+        # ORDER MODEL PAYLOAD CREATE
         order_to_insert = OrderModel(
             price=order.price,
             status=order.status,
@@ -25,64 +26,50 @@ class OrderRepository:
             client_id=order.client_id,
             order_date=order.order_date,
         )
-        try:
-            db.session.add(order_to_insert)
-            db.session.commit()
-        except Exception:
-            raise IntegrityError()
-        products_ids = [p.product_id for p in order.products]
+
+        # GETTING PRODUCTS TO POPULATE ORDER 
         products = (
             db.session.query(ProductModel)
-            .filter(ProductModel.product_id.in_(products_ids))
+            .filter(ProductModel.product_id.in_(order.products_ids))
             .all()
         )
-        # [ProductModel(**p.model_dump()) for p in order.products]
-        product_map = {}
-        for p in products:
-            order_to_insert.products.append(p)
-            product_map[p.product_id] = p
+
+        # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
+        for product_data in products:
+            product = product_data
+            op_type = product_data.type
+            op_name = product_data.name
+            op_price = product_data.price
+            op_description = product_data.description
+
+            order_to_insert.products.append(product, type=op_type, name=op_name, price=op_price, description=op_description)
+
+        # THIS TRY CREATE THE NEW ORDER AND THE ORDER_PRODUCTS
         try:
             db.session.add(order_to_insert)
             db.session.commit()
         except Exception:
             raise IntegrityError()
-        order_products_to_update = []
-        order_products = (
-            db.session.query(OrderProductModel)
-            .filter_by(order_id=order_to_insert.order_id)
-            .all()
-        )
-        for op in order_products:
-            p = product_map[op.product_id]
-            op.type = p.type
-            op.name = p.name
-            op.price = p.price
-            op.description = p.description
-            order_products_to_update.append(op)
-        try:
-            db.session.add_all(order_products_to_update)
-            db.session.commit()
-        except Exception:
-            raise IntegrityError()
+        
         return OrderEntity.from_orm(order_to_insert)
 
-    @staticmethod
-    def get_order_by_id(order_id: int) -> OrderEntity:
+    @classmethod
+    def get_order_by_id(cls, order_id: int) -> OrderEntity:
         """Get a order by it's id"""
         order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
         if not order:
             raise OrderDoesNotExistError
         return OrderEntity.from_orm(order)
 
-    @staticmethod
-    def get_all_orders() -> List[OrderEntity]:
+    @classmethod
+    def get_all_orders(cls) -> List[OrderEntity]:
         """Get all orders"""
         orders = db.session.query(OrderModel).all()
         orders_list = [OrderEntity.from_orm(order) for order in orders]
         return orders_list
 
-    @staticmethod
-    def update_order_status(order_id: int, status: str) -> OrderEntity:
+    @classmethod
+    def update_order_status(cls, order_id: int, status: str) -> OrderEntity:
         """Update an order's status"""
         order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
         if not order:
