@@ -11,8 +11,8 @@ from system.infrastructure.adapters.database.models.client_model import ClientMo
 
 
 class ClientRepository:
-    @staticmethod
-    def create_client(client: ClientEntity) -> ClientEntity:
+    @classmethod
+    def create_client(cls, client: ClientEntity) -> ClientEntity:
         """Create client"""
         client_to_insert = ClientModel(**client.model_dump())
         try:
@@ -24,16 +24,16 @@ class ClientRepository:
             raise ex
         return ClientEntity(**client.model_dump())
 
-    @staticmethod
-    def get_client_by_cpf(cpf: str) -> ClientEntity:
+    @classmethod
+    def get_client_by_cpf(cls, cpf: str) -> ClientEntity:
         """Get a client by it's cpf"""
         client = db.session.query(ClientModel).get(cpf)
         if not client:
             raise ClientDoesNotExistError
         return ClientEntity.from_orm(client)
 
-    @staticmethod
-    def get_all_clients() -> List[ClientEntity]:
+    @classmethod
+    def get_all_clients(cls) -> List[ClientEntity]:
         """Get all clients"""
         clients = db.session.query(ClientModel).all()
         clients_list = [ClientEntity.from_orm(client) for client in clients]

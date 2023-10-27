@@ -11,6 +11,7 @@ from system.application.dto.responses.product_response import (
     GetProductsByTypeResponse,
     UpdateProductResponse,
 )
+from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.product import ProductEntity
 from system.infrastructure.adapters.database.exceptions.product_exceptions import (
     ProductAlreadyExistsError,
@@ -22,7 +23,7 @@ from system.infrastructure.adapters.database.repositories.product_repository imp
 )
 
 
-class CreateProductUseCase(Resource):
+class CreateProductUseCase(UseCase, Resource):
     def execute(request: CreateProductRequest) -> CreateProductResponse:
         """
         Create product
@@ -36,7 +37,7 @@ class CreateProductUseCase(Resource):
         return CreateProductResponse(response.model_dump())
 
 
-class GetProductByIDUseCase(Resource):
+class GetProductByIDUseCase(UseCase, Resource):
     def execute(product_id: int) -> GetProductByIDResponse:
         """
         Get product by its id
@@ -45,7 +46,7 @@ class GetProductByIDUseCase(Resource):
         return GetProductByIDResponse(response.model_dump())
 
 
-class GetAllProductsUseCase(Resource):
+class GetAllProductsUseCase(UseCaseNoRequest, Resource):
     def execute() -> GetAllProductsResponse:
         """
         Get products with filters
@@ -55,7 +56,7 @@ class GetAllProductsUseCase(Resource):
         return GetAllProductsResponse(response)
 
 
-class GetProductsByTypeUseCase(Resource):
+class GetProductsByTypeUseCase(UseCase, Resource):
     def execute(product_type: int) -> GetProductsByTypeResponse:
         """
         Get product by its id
@@ -68,13 +69,13 @@ class GetProductsByTypeUseCase(Resource):
         return GetProductsByTypeResponse(response)
 
 
-class DeleteProductUseCase(Resource):
+class DeleteProductUseCase(UseCase, Resource):
     def execute(product_id: int) -> None:
         """Delete a product by its id"""
         ProductRepository.delete_product_by_id(product_id)
 
 
-class UpdateProductUseCase(Resource):
+class UpdateProductUseCase(UseCase, Resource):
     def execute(
         product_id: int,
         request: UpdateProductRequest,

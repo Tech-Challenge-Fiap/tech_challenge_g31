@@ -4,8 +4,8 @@ from system.infrastructure.adapters.database.models.payment_model import Payment
 
 
 class PaymentRepository:
-    @staticmethod
-    def create_payment(payment: PaymentEntity) -> PaymentEntity:
+    @classmethod
+    def create_payment(cls, payment: PaymentEntity) -> PaymentEntity:
         """Create payment"""
         payment_to_insert = PaymentModel(**payment.model_dump())
         db.session.add(payment_to_insert)

@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 from typing import Optional
 
+from system.domain.enums.enums import ProductTypeEnum
+
 
 class ProductEntity(BaseModel):
     product_id: Optional[int] = None
-    type: str
+    type: ProductTypeEnum
     name: str
     price: float
     prep_time: int

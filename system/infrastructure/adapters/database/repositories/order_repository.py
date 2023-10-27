@@ -14,8 +14,8 @@ from system.infrastructure.adapters.database.models.product_model import Product
 
 
 class OrderRepository:
-    @staticmethod
-    def create_order(order: OrderEntity) -> OrderEntity:
+    @classmethod
+    def create_order(cls, order: OrderEntity) -> OrderEntity:
         """Create order"""
         order_to_insert = OrderModel(
             price=order.price,
@@ -66,23 +66,23 @@ class OrderRepository:
             raise IntegrityError()
         return OrderEntity.from_orm(order_to_insert)
 
-    @staticmethod
-    def get_order_by_id(order_id: int) -> OrderEntity:
+    @classmethod
+    def get_order_by_id(cls, order_id: int) -> OrderEntity:
         """Get a order by it's id"""
         order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
         if not order:
             raise OrderDoesNotExistError
         return OrderEntity.from_orm(order)
 
-    @staticmethod
-    def get_all_orders() -> List[OrderEntity]:
+    @classmethod
+    def get_all_orders(cls) -> List[OrderEntity]:
         """Get all orders"""
         orders = db.session.query(OrderModel).all()
         orders_list = [OrderEntity.from_orm(order) for order in orders]
         return orders_list
 
-    @staticmethod
-    def update_order_status(order_id: int, status: str) -> OrderEntity:
+    @classmethod
+    def update_order_status(cls, order_id: int, status: str) -> OrderEntity:
         """Update an order's status"""
         order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
         if not order:

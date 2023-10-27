@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class CreateOrderRequest(BaseModel):
     products: List[int]
-    client_cpf: Optional[str]
+    client_cpf: Optional[str] = None
 
     class Config:
         from_attributes = True

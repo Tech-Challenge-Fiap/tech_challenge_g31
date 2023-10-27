@@ -21,6 +21,7 @@ class ProductRepository:
         inserted_product = (
             db.session.query(ProductModel).filter_by(name=product.name).first()
         )
+        inserted_product.type = inserted_product.type.value
         return ProductEntity(**inserted_product.__dict__)
 
     @staticmethod
