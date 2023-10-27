@@ -13,7 +13,6 @@ from system.infrastructure.adapters.database.models.order_product_model import (
 )
 from system.infrastructure.adapters.database.models.product_model import ProductModel
 
-
 class OrderRepository(OrderPort):
     @classmethod
     def create_order(cls, order: OrderEntity) -> OrderEntity:
@@ -27,30 +26,43 @@ class OrderRepository(OrderPort):
             order_date=order.order_date,
         )
 
-        # GETTING PRODUCTS TO POPULATE ORDER 
-        products = (
-            db.session.query(ProductModel)
-            .filter(ProductModel.product_id.in_(order.products_ids))
-            .all()
-        )
-
-        # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
-        for product_data in products:
-            product = product_data
-            op_type = product_data.type
-            op_name = product_data.name
-            op_price = product_data.price
-            op_description = product_data.description
-
-            order_to_insert.products.append(product, type=op_type, name=op_name, price=op_price, description=op_description)
-
-        # THIS TRY CREATE THE NEW ORDER AND THE ORDER_PRODUCTS
         try:
+            # CREATING ORDER IN DATABASE
+            # FLUSH TO REFRESH order_to_insert WITH ORDER_ID
             db.session.add(order_to_insert)
             db.session.commit()
+            db.session.flush()
+
+            # GETTING PRODUCTS TO POPULATE ORDER 
+            products = (
+                db.session.query(ProductModel)
+                .filter(ProductModel.product_id.in_(order.products_ids))
+                .all()
+            )
+
+            order_products = []
+            # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
+            for product_data in products:
+                order_product = OrderProductModel(
+                    order_id=order_to_insert.order_id,
+                    product_id=product_data.product_id,
+                    type=product_data.type,
+                    name=product_data.name,
+                    price=product_data.price,
+                    description=product_data.description,
+                )
+                order_products.append(order_product)
+
+            try:
+                db.session.add_all(order_products)
+                db.session.commit()
+            except Exception:
+                raise IntegrityError()
+            
         except Exception:
             raise IntegrityError()
         
+        order_to_insert.products_ids = order.products_ids
         return OrderEntity.from_orm(order_to_insert)
 
     @classmethod

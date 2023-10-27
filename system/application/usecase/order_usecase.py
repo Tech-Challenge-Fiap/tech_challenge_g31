@@ -7,6 +7,7 @@ from system.application.dto.responses.order_response import (
     GetOrderByIDResponse,
     UpdateOrderResponse,
 )
+from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.order import OrderEntity
 from system.domain.entities.payment import PaymentEntity
 from system.infrastructure.adapters.database.exceptions.order_exceptions import (
@@ -25,7 +26,7 @@ from system.infrastructure.adapters.database.repositories.product_repository imp
 )
 
 
-class CreateOrderUseCase(Resource):
+class CreateOrderUseCase(UseCase, Resource):
     def execute(request: CreateOrderRequest) -> CreateOrderResponse:
         """
         Create order
@@ -36,7 +37,7 @@ class CreateOrderUseCase(Resource):
         return CreateOrderResponse(response.model_dump())
 
 
-class CheckoutUseCase(Resource):
+class CheckoutUseCase(UseCase, Resource):
     def execute(request: CreateOrderRequest) -> CreateOrderResponse:
         """
         Checkout
@@ -51,7 +52,7 @@ class CheckoutUseCase(Resource):
         payment = PaymentEntity(qr_code=qr_code)
         order = OrderEntity(
             price=order_price,
-            products=products,
+            products_ids=request.products,
             waiting_time=order_waiting_time,
             client_id=request.client_cpf,
             payment=payment,
@@ -65,7 +66,7 @@ class CheckoutUseCase(Resource):
         return CreateOrderResponse(response.model_dump())
 
 
-class GetOrderByIDUseCase(Resource):
+class GetOrderByIDUseCase(UseCase, Resource):
     def execute(order_id: int) -> GetOrderByIDResponse:
         """
         Get order by its id
@@ -75,7 +76,7 @@ class GetOrderByIDUseCase(Resource):
         return GetOrderByIDResponse(response.model_dump())
 
 
-class GetAllOrdersUseCase(Resource):
+class GetAllOrdersUseCase(UseCaseNoRequest, Resource):
     def execute() -> GetAllOrdersResponse:
         """
         Get orders with filters
@@ -85,7 +86,7 @@ class GetAllOrdersUseCase(Resource):
         return GetAllOrdersResponse(orders)
 
 
-class UpdateOrderStatusUseCase(Resource):
+class UpdateOrderStatusUseCase(UseCase, Resource):
     def execute(
         status: str,
         order_id: int,

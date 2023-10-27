@@ -1,15 +1,10 @@
 from app import app
 from flask import request
 from pydantic import ValidationError
+from system.application.usecase import order_usecase
 from system.application.dto.requests.order_request import (
     CreateOrderRequest,
     UpdateOrderStatusRequest,
-)
-from system.application.usecase.order_usecase import (
-    CheckoutUseCase,
-    GetAllOrdersUseCase,
-    GetOrderByIDUseCase,
-    UpdateOrderStatusUseCase,
 )
 from system.infrastructure.adapters.database.exceptions.order_exceptions import (
     OrderDoesNotExistError,
@@ -23,16 +18,18 @@ def checkout():
     except ValidationError as ex:
         return ex.errors(), 400
     try:
-        order = CheckoutUseCase.execute(request=create_order_request)
+        order = order_usecase.CheckoutUseCase.execute(request=create_order_request)
     except Exception:
         return {"error": "Internal Error"}, 500
+    order.response["status"] = order.response["status"].value
+    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response
 
 
 @app.route("/get_order/<order_id>", methods=["GET"])
 def get_order_by_id(order_id):
     try:
-        order = GetOrderByIDUseCase.execute(order_id=order_id)
+        order = order_usecase.GetOrderByIDUseCase.execute(order_id=order_id)
     except OrderDoesNotExistError:
         return {"error": "This Order does not exist"}, 404
     except Exception:
@@ -43,7 +40,7 @@ def get_order_by_id(order_id):
 @app.route("/get_orders/", methods=["GET"])
 def get_orders():
     try:
-        orders = GetAllOrdersUseCase.execute()
+        orders = order_usecase.GetAllOrdersUseCase.execute()
     except Exception:
         return {"error": "Internal Error"}, 500
     return orders.response
@@ -56,7 +53,7 @@ def patch_order(order_id):
     except ValidationError as ex:
         return ex.errors(), 400
     try:
-        order = UpdateOrderStatusUseCase.execute(
+        order = order_usecase.UpdateOrderStatusUseCase.execute(
             order_id=order_id, status=update_order_request.status
         )
     except OrderDoesNotExistError:

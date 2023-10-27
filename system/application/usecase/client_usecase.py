@@ -5,6 +5,7 @@ from system.application.dto.responses.client_response import (
     GetAllClientsResponse,
     GetClientByCPFResponse,
 )
+from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.client import ClientEntity
 from system.infrastructure.adapters.database.exceptions.client_exceptions import (
     ClientDoesNotExistError,
@@ -15,7 +16,7 @@ from system.infrastructure.adapters.database.repositories.client_repository impo
 )
 
 
-class CreateClientUseCase(Resource):
+class CreateClientUseCase(UseCase, Resource):
     def execute(request: CreateClientRequest) -> CreateClientResponse:
         """
         Create client
@@ -26,7 +27,7 @@ class CreateClientUseCase(Resource):
         return CreateClientResponse(response.model_dump())
 
 
-class GetClientByCPFUseCase(Resource):
+class GetClientByCPFUseCase(UseCase, Resource):
     def execute(cpf: str) -> GetClientByCPFResponse:
         """
         Get client by cpf
@@ -37,7 +38,7 @@ class GetClientByCPFUseCase(Resource):
         return GetClientByCPFResponse(client.model_dump())
 
 
-class GetAllClientsUseCase(Resource):
+class GetAllClientsUseCase(UseCaseNoRequest, Resource):
     def execute() -> GetAllClientsResponse:
         """
         Get clients with filters
