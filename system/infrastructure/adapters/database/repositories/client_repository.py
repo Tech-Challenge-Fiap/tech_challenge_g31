@@ -1,6 +1,7 @@
 from typing import List
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
+from system.application.ports.client_port import ClientPort
 from system.domain.entities.client import ClientEntity
 from system.infrastructure.adapters.database.exceptions.client_exceptions import (
     ClientDoesNotExistError,
@@ -10,7 +11,7 @@ from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.client_model import ClientModel
 
 
-class ClientRepository:
+class ClientRepository(ClientPort):
     @classmethod
     def create_client(cls, client: ClientEntity) -> ClientEntity:
         """Create client"""

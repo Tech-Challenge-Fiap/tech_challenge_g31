@@ -52,7 +52,7 @@ class CheckoutUseCase(UseCase, Resource):
         payment = PaymentEntity(qr_code=qr_code)
         order = OrderEntity(
             price=order_price,
-            products=products,
+            products_ids=request.products,
             waiting_time=order_waiting_time,
             client_id=request.client_cpf,
             payment=payment,

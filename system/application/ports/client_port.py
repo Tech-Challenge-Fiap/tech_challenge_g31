@@ -22,7 +22,7 @@ class ClientPort:
 
     @classmethod
     @abstractmethod
-    def get_clients() -> List[ClientEntity]:
+    def get_all_clients() -> List[ClientEntity]:
         """
         Method that gets all clients
         """

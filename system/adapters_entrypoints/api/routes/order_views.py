@@ -21,6 +21,8 @@ def checkout():
         order = order_usecase.CheckoutUseCase.execute(request=create_order_request)
     except Exception:
         return {"error": "Internal Error"}, 500
+    order.response["status"] = order.response["status"].value
+    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response
 
 

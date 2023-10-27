@@ -1,5 +1,6 @@
 from typing import List
 from sqlalchemy.exc import IntegrityError
+from system.application.ports.order_port import OrderPort
 from system.domain.entities.order import OrderEntity
 from system.infrastructure.adapters.database.exceptions.order_exceptions import (
     OrderDoesNotExistError,
@@ -12,11 +13,10 @@ from system.infrastructure.adapters.database.models.order_product_model import (
 )
 from system.infrastructure.adapters.database.models.product_model import ProductModel
 
-
-class OrderRepository:
+class OrderRepository(OrderPort):
     @classmethod
     def create_order(cls, order: OrderEntity) -> OrderEntity:
-        """Create order"""
+        # ORDER MODEL PAYLOAD CREATE
         order_to_insert = OrderModel(
             price=order.price,
             status=order.status,
@@ -25,45 +25,44 @@ class OrderRepository:
             client_id=order.client_id,
             order_date=order.order_date,
         )
+
         try:
+            # CREATING ORDER IN DATABASE
+            # FLUSH TO REFRESH order_to_insert WITH ORDER_ID
             db.session.add(order_to_insert)
             db.session.commit()
+            db.session.flush()
+
+            # GETTING PRODUCTS TO POPULATE ORDER 
+            products = (
+                db.session.query(ProductModel)
+                .filter(ProductModel.product_id.in_(order.products_ids))
+                .all()
+            )
+
+            order_products = []
+            # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
+            for product_data in products:
+                order_product = OrderProductModel(
+                    order_id=order_to_insert.order_id,
+                    product_id=product_data.product_id,
+                    type=product_data.type,
+                    name=product_data.name,
+                    price=product_data.price,
+                    description=product_data.description,
+                )
+                order_products.append(order_product)
+
+            try:
+                db.session.add_all(order_products)
+                db.session.commit()
+            except Exception:
+                raise IntegrityError()
+            
         except Exception:
             raise IntegrityError()
-        products_ids = [p.product_id for p in order.products]
-        products = (
-            db.session.query(ProductModel)
-            .filter(ProductModel.product_id.in_(products_ids))
-            .all()
-        )
-        # [ProductModel(**p.model_dump()) for p in order.products]
-        product_map = {}
-        for p in products:
-            order_to_insert.products.append(p)
-            product_map[p.product_id] = p
-        try:
-            db.session.add(order_to_insert)
-            db.session.commit()
-        except Exception:
-            raise IntegrityError()
-        order_products_to_update = []
-        order_products = (
-            db.session.query(OrderProductModel)
-            .filter_by(order_id=order_to_insert.order_id)
-            .all()
-        )
-        for op in order_products:
-            p = product_map[op.product_id]
-            op.type = p.type
-            op.name = p.name
-            op.price = p.price
-            op.description = p.description
-            order_products_to_update.append(op)
-        try:
-            db.session.add_all(order_products_to_update)
-            db.session.commit()
-        except Exception:
-            raise IntegrityError()
+        
+        order_to_insert.products_ids = order.products_ids
         return OrderEntity.from_orm(order_to_insert)
 
     @classmethod

@@ -16,7 +16,7 @@ class OrderPort:
 
     @classmethod
     @abstractmethod
-    def get_orders(status: OrderStatusEnum) -> List[OrderEntity]:
+    def get_all_orders(status: OrderStatusEnum) -> List[OrderEntity]:
         """
         Method thar gets all orders by status
         """
@@ -30,7 +30,7 @@ class OrderPort:
 
     @classmethod
     @abstractmethod
-    def patch_order(order_id) -> OrderEntity:
+    def update_order_status(order_id) -> OrderEntity:
         """
         Update an order's status
         """

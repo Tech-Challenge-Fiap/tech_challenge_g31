@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 from sqlalchemy.orm.exc import UnmappedInstanceError
 from sqlalchemy.exc import IntegrityError
+from system.application.ports.product_port import ProductPort
 from system.domain.entities.product import ProductEntity
 from system.infrastructure.adapters.database.exceptions.product_exceptions import (
     ProductDeleteError,
@@ -11,9 +12,9 @@ from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.product_model import ProductModel
 
 
-class ProductRepository:
-    @staticmethod
-    def create_product(product: ProductEntity) -> ProductEntity:
+class ProductRepository(ProductPort):
+    @classmethod
+    def create_product(cls, product: ProductEntity) -> ProductEntity:
         """Create product"""
         product_to_insert = ProductModel(**product.model_dump())
         db.session.add(product_to_insert)
@@ -24,8 +25,8 @@ class ProductRepository:
         inserted_product.type = inserted_product.type.value
         return ProductEntity(**inserted_product.__dict__)
 
-    @staticmethod
-    def get_product_by_id(product_id: int) -> ProductEntity:
+    @classmethod
+    def get_product_by_id(cls, product_id: int) -> ProductEntity:
         """Get a product by it's id"""
         product = (
             db.session.query(ProductModel).filter_by(product_id=product_id).first()
@@ -34,8 +35,8 @@ class ProductRepository:
             raise ProductDoesNotExistError
         return ProductEntity.from_orm(product)
 
-    @staticmethod
-    def get_products_by_ids(product_ids: List[int]) -> ProductEntity:
+    @classmethod
+    def get_products_by_ids(cls, product_ids: List[int]) -> ProductEntity:
         """Get a product by it's id"""
         products = (
             db.session.query(ProductModel)
@@ -45,22 +46,22 @@ class ProductRepository:
         products_list = [ProductEntity.from_orm(product) for product in products]
         return products_list
 
-    @staticmethod
-    def get_products_by_type(produc_type: int) -> List[ProductEntity]:
+    @classmethod
+    def get_products_by_type(cls, produc_type: int) -> List[ProductEntity]:
         """Get products by type"""
         products = db.session.query(ProductModel).filter_by(type=produc_type).all()
         products_list = [ProductEntity.from_orm(product) for product in products]
         return products_list
 
-    @staticmethod
-    def get_all_products() -> List[ProductEntity]:
+    @classmethod
+    def get_all_products(cls) -> List[ProductEntity]:
         """Get all products"""
         products = db.session.query(ProductModel).all()
         products_list = [ProductEntity.from_orm(product) for product in products]
         return products_list
 
-    @staticmethod
-    def delete_product_by_id(product_id: int) -> bool:
+    @classmethod
+    def delete_product_by_id(cls, product_id: int) -> bool:
         """Delete product by its id"""
         product = (
             db.session.query(ProductModel).filter_by(product_id=product_id).first()
@@ -74,8 +75,8 @@ class ProductRepository:
             raise ProductDeleteError(str(ex))
         return True
 
-    @staticmethod
-    def update_product(product_id: int, request: Dict[str, Any]) -> ProductEntity:
+    @classmethod
+    def update_product(cls, product_id: int, request: Dict[str, Any]) -> ProductEntity:
         """Update product"""
         product = (
             db.session.query(ProductModel).filter_by(product_id=product_id).first()
