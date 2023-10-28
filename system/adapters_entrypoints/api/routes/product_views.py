@@ -90,4 +90,5 @@ def update_product(product_id: int):
         return {"error": "This Product can not be updated"}, 400
     except Exception as ex:
         return {"error": "Internal Error"}, 500
+    product.response["type"] = product.response["type"].value
     return product.response, 200

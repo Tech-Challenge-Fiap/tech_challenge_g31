@@ -19,11 +19,12 @@ class ClientRepository(ClientPort):
         try:
             db.session.add(client_to_insert)
             db.session.commit()
+            db.session.flush()
         except IntegrityError as ex:
             if isinstance(ex.orig, UniqueViolation):
                 raise ClientAlreadyExistsError
             raise ex
-        return ClientEntity(**client.model_dump())
+        return ClientEntity.from_orm(client_to_insert)
 
     @classmethod
     def get_client_by_cpf(cls, cpf: str) -> ClientEntity:
