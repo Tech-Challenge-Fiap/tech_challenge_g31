@@ -1,6 +1,8 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
+from system.domain.enums.enums import OrderStatusEnum
+
 
 class CreateOrderRequest(BaseModel):
     products: List[int]
@@ -11,7 +13,7 @@ class CreateOrderRequest(BaseModel):
 
 
 class UpdateOrderStatusRequest(BaseModel):
-    status: str
+    status: OrderStatusEnum
 
     class Config:
         from_attributes = True

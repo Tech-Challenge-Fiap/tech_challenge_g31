@@ -60,4 +60,6 @@ def patch_order(order_id):
         return "This Order does not exist", 400
     except Exception:
         return {"error": "Internal Error"}, 500
+    order.response["status"] = order.response["status"].value
+    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response

@@ -2,6 +2,8 @@ from typing import List
 from sqlalchemy.exc import IntegrityError
 from system.application.ports.order_port import OrderPort
 from system.domain.entities.order import OrderEntity
+from system.domain.entities.product import ProductEntity
+from system.domain.enums.enums import OrderStatusEnum
 from system.infrastructure.adapters.database.exceptions.order_exceptions import (
     OrderDoesNotExistError,
 )
@@ -81,17 +83,22 @@ class OrderRepository(OrderPort):
         return orders_list
 
     @classmethod
-    def update_order_status(cls, order_id: int, status: str) -> OrderEntity:
+    def update_order_status(cls, order_id: int, status: OrderStatusEnum) -> OrderEntity:
         """Update an order's status"""
         order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
+        order_products = db.session.query(OrderProductModel).filter_by(order_id=order_id).all()
+
+        product_list = []
+        for product in order_products:
+            product_list.append(product.product_id)
+
         if not order:
             raise OrderDoesNotExistError
         try:
-            db.session.query(OrderModel).filter_by(order_id=order_id).update(
-                status=status
-            )
+            order.status = status
             db.session.commit()
         except IntegrityError:
             raise OrderUpdateError
-
-        return OrderEntity(**order.__dict__)
+        
+        order.products_ids = product_list
+        return OrderEntity.from_orm(order)

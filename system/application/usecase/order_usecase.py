@@ -10,6 +10,7 @@ from system.application.dto.responses.order_response import (
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.order import OrderEntity
 from system.domain.entities.payment import PaymentEntity
+from system.domain.enums.enums import OrderStatusEnum
 from system.infrastructure.adapters.database.exceptions.order_exceptions import (
     OrderAlreadyExistsError,
     OrderUpdateError,
@@ -88,7 +89,7 @@ class GetAllOrdersUseCase(UseCaseNoRequest, Resource):
 
 class UpdateOrderStatusUseCase(UseCase, Resource):
     def execute(
-        status: str,
+        status: OrderStatusEnum,
         order_id: int,
     ) -> UpdateOrderResponse:
         """
@@ -99,4 +100,4 @@ class UpdateOrderStatusUseCase(UseCase, Resource):
         except IntegrityError as err:
             raise OrderUpdateError(str(err))
 
-        return UpdateOrderResponse(response)
+        return UpdateOrderResponse(response.model_dump())
