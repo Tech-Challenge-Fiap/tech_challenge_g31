@@ -1,15 +1,12 @@
 from app import app
 from flask import request
 from pydantic import ValidationError
+from system.application.exceptions.default_exceptions import InfrastructureError
+from system.application.exceptions.product_exceptions import ProductAlreadyExistsError, ProductDoesNotExistError, ProductTypeError, ProductUpdateError
 from system.application.usecase import products_usecase
 from system.application.dto.requests.product_request import (
     CreateProductRequest,
     UpdateProductRequest,
-)
-from system.infrastructure.adapters.database.exceptions.product_exceptions import (
-    ProductDeleteError,
-    ProductDoesNotExistError,
-    ProductUpdateError,
 )
 
 
@@ -21,7 +18,9 @@ def create_product():
         return ex.errors(), 400
     try:
         product = products_usecase.CreateProductUseCase.execute(request=create_product_request)
-    except Exception:
+    except ProductAlreadyExistsError:
+        return {"error": "This product already exists"}, 409
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     product.response["type"] = product.response["type"].value
     return product.response
@@ -33,7 +32,7 @@ def get_product_by_id(product_id):
         product = products_usecase.GetProductByIDUseCase.execute(product_id=product_id)
     except ProductDoesNotExistError:
         return {"error": "This Product does not exist"}, 404
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     product.response["type"] = product.response["type"].value
     return product.response
@@ -43,7 +42,7 @@ def get_product_by_id(product_id):
 def get_products():
     try:
         products = products_usecase.GetAllProductsUseCase.execute()
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     products_list = []
     for product in products.response:
@@ -56,8 +55,10 @@ def get_products():
 def get_products_by_type(product_type):
     try:
         products = products_usecase.GetProductsByTypeUseCase.execute(product_type=product_type)
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
+    except ProductTypeError:
+        return {"error": "This Product Type does not exist"}, 400
     products_list = []
     for product in products.response:
         product.type=product.type.value
@@ -70,9 +71,7 @@ def delete_product(product_id):
         products_usecase.DeleteProductUseCase.execute(product_id=product_id)
     except ProductDoesNotExistError:
         return {"error": "This Product does not exist"}, 404
-    except ProductDeleteError:
-        return {"error": "This Product can not be deleted"}, 400
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return "", 204
 
@@ -90,8 +89,8 @@ def update_product(product_id: int):
     except ProductDoesNotExistError:
         return {"error": "This Product does not exist"}, 404
     except ProductUpdateError:
-        return {"error": "This Product can not be updated"}, 400
-    except Exception as ex:
+        return {"error": "This Product could not be updated"}, 400
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     product.response["type"] = product.response["type"].value
     return product.response, 200

@@ -1,15 +1,12 @@
 from typing import List
 from sqlalchemy.exc import IntegrityError
+from system.application.exceptions.order_exceptions import OrderUpdateError
 from system.application.ports.order_port import OrderPort
 from system.domain.entities.order import OrderEntity
-from system.domain.entities.product import ProductEntity
 from system.domain.enums.enums import OrderStatusEnum
-from system.infrastructure.adapters.database.exceptions.order_exceptions import (
-    OrderDoesNotExistError,
-)
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
 from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.order_model import OrderModel
-from system.infrastructure.adapters.database.exceptions.order_exceptions import OrderUpdateError
 from system.infrastructure.adapters.database.models.order_product_model import (
     OrderProductModel,
 )
@@ -34,35 +31,35 @@ class OrderRepository(OrderPort):
             db.session.add(order_to_insert)
             db.session.commit()
             db.session.flush()
-
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
             # GETTING PRODUCTS TO POPULATE ORDER 
+        try:
             products = (
                 db.session.query(ProductModel)
                 .filter(ProductModel.product_id.in_(order.products_ids))
                 .all()
             )
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        order_products = []
+        # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
+        for product_data in products:
+            order_product = OrderProductModel(
+                order_id=order_to_insert.order_id,
+                product_id=product_data.product_id,
+                type=product_data.type,
+                name=product_data.name,
+                price=product_data.price,
+                description=product_data.description,
+            )
+            order_products.append(order_product)
 
-            order_products = []
-            # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
-            for product_data in products:
-                order_product = OrderProductModel(
-                    order_id=order_to_insert.order_id,
-                    product_id=product_data.product_id,
-                    type=product_data.type,
-                    name=product_data.name,
-                    price=product_data.price,
-                    description=product_data.description,
-                )
-                order_products.append(order_product)
-
-            try:
-                db.session.add_all(order_products)
-                db.session.commit()
-            except Exception:
-                raise IntegrityError()
-            
-        except Exception:
-            raise IntegrityError()
+        try:
+            db.session.add_all(order_products)
+            db.session.commit()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
         
         order_to_insert.products_ids = order.products_ids
         return OrderEntity.from_orm(order_to_insert)
@@ -70,25 +67,35 @@ class OrderRepository(OrderPort):
     @classmethod
     def get_order_by_id(cls, order_id: int) -> OrderEntity:
         """Get a order by it's id"""
-        order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
+        try:
+            order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
         if not order:
-            raise OrderDoesNotExistError
-        
-        order_products = db.session.query(OrderProductModel).filter_by(order_id=order_id).all()
+            raise NoObjectFoundError
+        try:
+            order_products = db.session.query(OrderProductModel).filter_by(order_id=order_id).all()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
         product_list = []
         for product in order_products:
             product_list.append(product.product_id)
         order.products_ids = product_list
-
         return OrderEntity.from_orm(order)
 
     @classmethod
     def get_all_orders(cls) -> List[OrderEntity]:
         """Get all orders"""
-        orders = db.session.query(OrderModel).all()
-
+        try:
+            orders = db.session.query(OrderModel).all()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        
         for order in orders:
-            order_products = db.session.query(OrderProductModel).filter_by(order_id=order.order_id).all()
+            try:
+                order_products = db.session.query(OrderProductModel).filter_by(order_id=order.order_id).all()
+            except IntegrityError:
+                raise PostgreSQLError("PostgreSQL Error")
             product_list = []
             for product in order_products:
                 product_list.append(product.product_id)
@@ -100,15 +107,16 @@ class OrderRepository(OrderPort):
     @classmethod
     def update_order_status(cls, order_id: int, status: OrderStatusEnum) -> OrderEntity:
         """Update an order's status"""
-        order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
-        order_products = db.session.query(OrderProductModel).filter_by(order_id=order_id).all()
-
+        try:
+            order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
+            order_products = db.session.query(OrderProductModel).filter_by(order_id=order_id).all()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
         product_list = []
         for product in order_products:
             product_list.append(product.product_id)
-
         if not order:
-            raise OrderDoesNotExistError
+            raise NoObjectFoundError
         try:
             order.status = status
             db.session.commit()

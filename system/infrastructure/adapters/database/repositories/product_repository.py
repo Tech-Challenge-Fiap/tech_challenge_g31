@@ -1,13 +1,10 @@
 from typing import Any, Dict, List
-from sqlalchemy.orm.exc import UnmappedInstanceError
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
+from psycopg2.errors import UniqueViolation
+from system.application.exceptions.product_exceptions import ProductAlreadyExistsError, ProductUpdateError
 from system.application.ports.product_port import ProductPort
 from system.domain.entities.product import ProductEntity
-from system.infrastructure.adapters.database.exceptions.product_exceptions import (
-    ProductDeleteError,
-    ProductDoesNotExistError,
-    ProductUpdateError,
-)
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import InvalidInputError, NoObjectFoundError, PostgreSQLError
 from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.product_model import ProductModel
 
@@ -18,69 +15,96 @@ class ProductRepository(ProductPort):
         """Create product"""
         product_to_insert = ProductModel(**product.model_dump())
         db.session.add(product_to_insert)
-        db.session.commit()
-        db.session.flush()
-        product_to_insert.type = product_to_insert.type.value
+        try:
+            db.session.commit()
+            db.session.flush()
+            product_to_insert.type = product_to_insert.type.value
+        except IntegrityError as error:
+            if isinstance(error.orig, UniqueViolation):
+                raise ProductAlreadyExistsError
+            raise PostgreSQLError
         return ProductEntity.from_orm(product_to_insert)
 
     @classmethod
     def get_product_by_id(cls, product_id: int) -> ProductEntity:
         """Get a product by it's id"""
-        product = (
-            db.session.query(ProductModel).filter_by(product_id=product_id).first()
-        )
+        try:
+            product = (
+                db.session.query(ProductModel).filter_by(product_id=product_id).first()
+            )
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
         if not product:
-            raise ProductDoesNotExistError
+            raise NoObjectFoundError
         return ProductEntity.from_orm(product)
 
     @classmethod
     def get_products_by_ids(cls, product_ids: List[int]) -> ProductEntity:
         """Get a product by it's id"""
-        products = (
-            db.session.query(ProductModel)
-            .filter(ProductModel.product_id.in_(product_ids))
-            .all()
-        )
+        try:
+            products = (
+                db.session.query(ProductModel)
+                .filter(ProductModel.product_id.in_(product_ids))
+                .all()
+            )
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        if not products:
+            raise NoObjectFoundError
         products_list = [ProductEntity.from_orm(product) for product in products]
         return products_list
 
     @classmethod
     def get_products_by_type(cls, produc_type: int) -> List[ProductEntity]:
         """Get products by type"""
-        products = db.session.query(ProductModel).filter_by(type=produc_type).all()
+        try:
+            products = db.session.query(ProductModel).filter_by(type=produc_type).all()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        except DataError:
+            raise InvalidInputError
         products_list = [ProductEntity.from_orm(product) for product in products]
         return products_list
 
     @classmethod
     def get_all_products(cls) -> List[ProductEntity]:
         """Get all products"""
-        products = db.session.query(ProductModel).all()
+        try:
+            products = db.session.query(ProductModel).all()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
         products_list = [ProductEntity.from_orm(product) for product in products]
         return products_list
 
     @classmethod
     def delete_product_by_id(cls, product_id: int) -> bool:
         """Delete product by its id"""
-        product = (
-            db.session.query(ProductModel).filter_by(product_id=product_id).first()
-        )
+        try:
+            product = (
+                db.session.query(ProductModel).filter_by(product_id=product_id).first()
+            )
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        if not product:
+            raise NoObjectFoundError
         try:
             db.session.delete(product)
             db.session.commit()
-        except UnmappedInstanceError as err:
-            raise ProductDoesNotExistError(str(err))
-        except Exception as ex:
-            raise ProductDeleteError(str(ex))
+        except IntegrityError as ex:
+            raise PostgreSQLError("PostgreSQL Error")
         return True
 
     @classmethod
     def update_product(cls, product_id: int, request: Dict[str, Any]) -> ProductEntity:
         """Update product"""
-        product = (
-            db.session.query(ProductModel).filter_by(product_id=product_id).first()
-        )
+        try:
+            product = (
+                db.session.query(ProductModel).filter_by(product_id=product_id).first()
+            )
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
         if not product:
-            raise ProductDoesNotExistError
+            raise NoObjectFoundError
         update_attributes = {
             "name": request.name,
             "price": request.price,
@@ -88,13 +112,12 @@ class ProductRepository(ProductPort):
             "description": request.description,
             "image": request.image,
         }
-
         # Atualiza os atributos do produto com base no dicionário
         for attr, value in update_attributes.items():
             if value is not None:
                 setattr(product, attr, value)
         try:
             db.session.commit()
-        except IntegrityError:
+        except Exception:
             raise ProductUpdateError
         return ProductEntity.from_orm(product)

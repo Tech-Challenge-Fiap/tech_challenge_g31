@@ -32,3 +32,11 @@ class ProductDeleteError(Exception):
         *args: object,
     ):
         super().__init__(msg, *args)
+
+class ProductTypeError(Exception):
+    def __init__(  # noqa: WPS612
+        self,
+        msg: str = "This Product Type does not exist",
+        *args: object,
+    ):
+        super().__init__(msg, *args)

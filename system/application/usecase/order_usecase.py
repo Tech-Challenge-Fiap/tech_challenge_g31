@@ -7,32 +7,26 @@ from system.application.dto.responses.order_response import (
     GetOrderByIDResponse,
     UpdateOrderResponse,
 )
+from system.application.exceptions.default_exceptions import InfrastructureError
+from system.application.exceptions.order_exceptions import OrderDoesNotExistError, OrderUpdateError
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.order import OrderEntity
 from system.domain.entities.payment import PaymentEntity
 from system.domain.enums.enums import OrderStatusEnum
-from system.infrastructure.adapters.database.exceptions.order_exceptions import (
-    OrderAlreadyExistsError,
-    OrderUpdateError,
-)
-
-from system.infrastructure.adapters.database.repositories.order_repository import (
-    OrderRepository,
-)
-from system.infrastructure.adapters.database.repositories.payment_repository import (
-    PaymentRepository,
-)
-from system.infrastructure.adapters.database.repositories.product_repository import (
-    ProductRepository,
-)
-
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
+from system.infrastructure.adapters.database.repositories.order_repository import OrderRepository
+from system.infrastructure.adapters.database.repositories.payment_repository import PaymentRepository
+from system.infrastructure.adapters.database.repositories.product_repository import ProductRepository
 
 class CreateOrderUseCase(UseCase, Resource):
     def execute(request: CreateOrderRequest) -> CreateOrderResponse:
         """
         Create order
         """
-        order = OrderEntity(**request.model_dump())
+        try:
+            order = OrderEntity(**request.model_dump())
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
         response = OrderRepository.create_order(order)
 
         return CreateOrderResponse(response.model_dump())
@@ -43,7 +37,12 @@ class CheckoutUseCase(UseCase, Resource):
         """
         Checkout
         """
-        products = ProductRepository.get_products_by_ids(request.products)
+        try:
+            products = ProductRepository.get_products_by_ids(request.products)
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
+        except NoObjectFoundError:
+            raise OrderDoesNotExistError
         order_price = 0
         order_waiting_time = 0
         for p in products:
@@ -61,9 +60,8 @@ class CheckoutUseCase(UseCase, Resource):
         try:
             order.payment = PaymentRepository.create_payment(payment)
             response = OrderRepository.create_order(order)
-        except IntegrityError as err:
-            raise OrderAlreadyExistsError(str(err))
-
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
         return CreateOrderResponse(response.model_dump())
 
 
@@ -72,8 +70,12 @@ class GetOrderByIDUseCase(UseCase, Resource):
         """
         Get order by its id
         """
-        response = OrderRepository.get_order_by_id(order_id)
-
+        try:
+            response = OrderRepository.get_order_by_id(order_id)
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
+        except NoObjectFoundError:
+            raise OrderDoesNotExistError
         return GetOrderByIDResponse(response.model_dump())
 
 
@@ -82,7 +84,11 @@ class GetAllOrdersUseCase(UseCaseNoRequest, Resource):
         """
         Get orders with filters
         """
-        response = OrderRepository.get_all_orders()
+        try:
+            response = OrderRepository.get_all_orders()
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
+
         orders = [r.model_dump() for r in response]
         return GetAllOrdersResponse(orders)
 
@@ -99,5 +105,6 @@ class UpdateOrderStatusUseCase(UseCase, Resource):
             response = OrderRepository.update_order_status(order_id, status)
         except IntegrityError as err:
             raise OrderUpdateError(str(err))
-
+        except NoObjectFoundError:
+            raise OrderDoesNotExistError
         return UpdateOrderResponse(response.model_dump())

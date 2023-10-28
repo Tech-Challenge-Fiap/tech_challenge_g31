@@ -1,13 +1,12 @@
 from app import app
 from flask import request
 from pydantic import ValidationError
+from system.application.exceptions.default_exceptions import InfrastructureError
+from system.application.exceptions.order_exceptions import OrderDoesNotExistError, OrderUpdateError
 from system.application.usecase import order_usecase
 from system.application.dto.requests.order_request import (
     CreateOrderRequest,
     UpdateOrderStatusRequest,
-)
-from system.infrastructure.adapters.database.exceptions.order_exceptions import (
-    OrderDoesNotExistError,
 )
 
 
@@ -19,8 +18,10 @@ def checkout():
         return ex.errors(), 400
     try:
         order = order_usecase.CheckoutUseCase.execute(request=create_order_request)
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
+    except OrderDoesNotExistError:
+        return {"error": "This Order does not exist"}, 404
     order.response["status"] = order.response["status"].value
     order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response
@@ -32,7 +33,7 @@ def get_order_by_id(order_id):
         order = order_usecase.GetOrderByIDUseCase.execute(order_id=order_id)
     except OrderDoesNotExistError:
         return {"error": "This Order does not exist"}, 404
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     order.response["status"] = order.response["status"].value
     order.response["payment"]["status"] = order.response["payment"]["status"].value
@@ -43,7 +44,7 @@ def get_order_by_id(order_id):
 def get_orders():
     try:
         orders = order_usecase.GetAllOrdersUseCase.execute()
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     for order in orders.response:
         order["status"] = order["status"].value
@@ -63,8 +64,10 @@ def patch_order(order_id):
         )
     except OrderDoesNotExistError:
         return "This Order does not exist", 400
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
+    except OrderUpdateError:
+        return {"error": "This Order could not be updated"}, 400
     order.response["status"] = order.response["status"].value
     order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response

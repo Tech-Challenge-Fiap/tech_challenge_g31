@@ -1,12 +1,10 @@
 from app import app
 from flask import request
 from pydantic import ValidationError
+from system.application.exceptions.client_exceptions import ClientAlreadyExistsError, ClientDoesNotExistError
+from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.usecase import client_usecase
 from system.application.dto.requests.client_request import CreateClientRequest
-from system.infrastructure.adapters.database.exceptions.client_exceptions import (
-    ClientAlreadyExistsError,
-    ClientDoesNotExistError,
-)
 
 @app.route("/create_client", methods=["POST"])
 def create_client():
@@ -18,7 +16,7 @@ def create_client():
         client = client_usecase.CreateClientUseCase.execute(request=create_client_request)
     except ClientAlreadyExistsError:
         return {"error": "This Client already exists"}, 409
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return client.response
 
@@ -29,7 +27,7 @@ def get_client_by_cpf(cpf):
         client = client_usecase.GetClientByCPFUseCase.execute(cpf=cpf)
     except ClientDoesNotExistError:
         return {"error": "This Client does not exist"}, 404
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return client.response
 
@@ -39,6 +37,6 @@ def get_clients():
     try:
         clients = client_usecase.GetAllClientsUseCase.execute()
         clients_list = [vars(client) for client in clients.response]
-    except Exception:
+    except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return clients_list
