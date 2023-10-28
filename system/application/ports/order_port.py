@@ -30,7 +30,7 @@ class OrderPort:
 
     @classmethod
     @abstractmethod
-    def update_order_status(order_id) -> OrderEntity:
+    def update_order_status(order_id, status: OrderStatusEnum) -> OrderEntity:
         """
         Update an order's status
         """
