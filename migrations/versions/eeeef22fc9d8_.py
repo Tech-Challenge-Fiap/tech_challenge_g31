@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 71e6a974822a
+Revision ID: eeeef22fc9d8
 Revises: 
-Create Date: 2023-10-28 21:13:20.999815
+Create Date: 2023-10-28 23:41:08.095956
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '71e6a974822a'
+revision = 'eeeef22fc9d8'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,7 +27,7 @@ def upgrade():
     op.create_table('payments',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('qr_code', sa.String(), nullable=False),
-    sa.Column('payed_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('payed_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('status', sa.Enum('PAID', 'UNPAID', name='paymentstatusenum'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -47,7 +47,7 @@ def upgrade():
     sa.Column('order_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('order_date', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('price', sa.Integer(), nullable=True),
-    sa.Column('status', sa.Enum('RECIEVED', 'PREPARING', 'READY', 'COMPLETED', name='orderstatusenum'), nullable=False),
+    sa.Column('status', sa.Enum('CANCELED', 'TO_BE_PAYED', 'RECIEVED', 'PREPARING', 'READY', 'COMPLETED', name='orderstatusenum'), nullable=False),
     sa.Column('waiting_time', sa.Integer(), nullable=True),
     sa.Column('client_id', sa.String(), nullable=True),
     sa.Column('payment_id', sa.Integer(), nullable=False),

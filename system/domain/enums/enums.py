@@ -1,6 +1,8 @@
 from enum import Enum
 
 class OrderStatusEnum(Enum):
+    CANCELED = "CANCELED"
+    TO_BE_PAYED = "WAITING PAYMENT"
     RECIEVED = "RECIEVED"
     PREPARING = "PREPARING"
     READY = "READY"

@@ -11,7 +11,7 @@ class OrderEntity(BaseModel):
     order_date: datetime = datetime.today().date()
     price: Optional[Decimal] = None
     products_ids: List[int]
-    status: OrderStatusEnum = OrderStatusEnum.RECIEVED
+    status: OrderStatusEnum = OrderStatusEnum.TO_BE_PAYED
     waiting_time: Optional[int] = None
     client_id: Optional[str] = None
     payment: PaymentEntity

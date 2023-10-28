@@ -1,6 +1,7 @@
 from app import app
 from flask import request
 from pydantic import ValidationError
+from system.application.dto.requests.payment_request import PaymentRequest
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.exceptions.order_exceptions import OrderDoesNotExistError, OrderUpdateError
 from system.application.usecase import order_usecase
@@ -9,15 +10,31 @@ from system.application.dto.requests.order_request import (
     UpdateOrderStatusRequest,
 )
 
+@app.route("/checkout/<order_id>", methods=["PATCH"])
+def checkout_order(order_id):
+    try:
+        mercado_pago_request = PaymentRequest(**request.get_json())
+    except ValidationError as ex:
+        return ex.errors(), 400
+    try:
+          order = order_usecase.CheckoutOrderUseCase.execute(order_id=order_id, request=mercado_pago_request)
+    except InfrastructureError:
+        return {"error": "Internal Error"}, 500
+    except OrderDoesNotExistError:
+        return {"error": "This Order does not exist"}, 404
+    order.response["status"] = order.response["status"].value
+    order.response["payment"]["status"] = order.response["payment"]["status"].value
+    return order.response
 
-@app.route("/checkout", methods=["POST"])
-def checkout():
+
+@app.route("/create_order", methods=["POST"])
+def create_order():
     try:
         create_order_request = CreateOrderRequest(**request.get_json())
     except ValidationError as ex:
         return ex.errors(), 400
     try:
-        order = order_usecase.CheckoutUseCase.execute(request=create_order_request)
+        order = order_usecase.CreateOrderUseCase.execute(request=create_order_request)
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     except OrderDoesNotExistError:
