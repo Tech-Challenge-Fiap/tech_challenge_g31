@@ -73,12 +73,27 @@ class OrderRepository(OrderPort):
         order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
         if not order:
             raise OrderDoesNotExistError
+        
+        order_products = db.session.query(OrderProductModel).filter_by(order_id=order_id).all()
+        product_list = []
+        for product in order_products:
+            product_list.append(product.product_id)
+        order.products_ids = product_list
+
         return OrderEntity.from_orm(order)
 
     @classmethod
     def get_all_orders(cls) -> List[OrderEntity]:
         """Get all orders"""
         orders = db.session.query(OrderModel).all()
+
+        for order in orders:
+            order_products = db.session.query(OrderProductModel).filter_by(order_id=order.order_id).all()
+            product_list = []
+            for product in order_products:
+                product_list.append(product.product_id)
+            order.products_ids = product_list
+
         orders_list = [OrderEntity.from_orm(order) for order in orders]
         return orders_list
 

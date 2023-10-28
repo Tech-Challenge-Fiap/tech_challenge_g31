@@ -35,6 +35,7 @@ def get_product_by_id(product_id):
         return {"error": "This Product does not exist"}, 404
     except Exception:
         return {"error": "Internal Error"}, 500
+    product.response["type"] = product.response["type"].value
     return product.response
 
 
@@ -46,6 +47,7 @@ def get_products():
         return {"error": "Internal Error"}, 500
     products_list = []
     for product in products.response:
+        product.type=product.type.value
         products_list.append(vars(product))
     return products_list
 
@@ -58,6 +60,7 @@ def get_products_by_type(product_type):
         return {"error": "Internal Error"}, 500
     products_list = []
     for product in products.response:
+        product.type=product.type.value
         products_list.append(vars(product))
     return products_list
 

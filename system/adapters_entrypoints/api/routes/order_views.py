@@ -34,6 +34,8 @@ def get_order_by_id(order_id):
         return {"error": "This Order does not exist"}, 404
     except Exception:
         return {"error": "Internal Error"}, 500
+    order.response["status"] = order.response["status"].value
+    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response
 
 
@@ -43,6 +45,9 @@ def get_orders():
         orders = order_usecase.GetAllOrdersUseCase.execute()
     except Exception:
         return {"error": "Internal Error"}, 500
+    for order in orders.response:
+        order["status"] = order["status"].value
+        order["payment"]["status"] = order["payment"]["status"].value
     return orders.response
 
 

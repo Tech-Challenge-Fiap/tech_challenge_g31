@@ -82,7 +82,6 @@ class ProductRepository(ProductPort):
         if not product:
             raise ProductDoesNotExistError
         update_attributes = {
-            "type": request.type,
             "name": request.name,
             "price": request.price,
             "prep_time": request.prep_time,
