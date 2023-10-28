@@ -10,6 +10,6 @@ class PaymentModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     qr_code = db.Column(db.String, nullable=False)
-    payed_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    payed_at = db.Column(db.DateTime(timezone=True))
     status = db.Column(SQLAlchemyEnum(PaymentStatusEnum), nullable=False)
     order = relationship("OrderModel", back_populates="payment", uselist=False)

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 3f55046fd190
+Revision ID: 71e6a974822a
 Revises: 
-Create Date: 2023-10-27 00:50:37.619398
+Create Date: 2023-10-28 21:13:20.999815
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3f55046fd190'
+revision = '71e6a974822a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -39,6 +39,7 @@ def upgrade():
     sa.Column('prep_time', sa.Integer(), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('image', sa.String(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('product_id'),
     sa.UniqueConstraint('name')
     )
@@ -58,7 +59,7 @@ def upgrade():
     sa.Column('order_product_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('product_id', sa.Integer(), nullable=True),
     sa.Column('order_id', sa.Integer(), nullable=True),
-    sa.Column('type', sa.String(length=10), nullable=True),
+    sa.Column('type', sa.Enum('SNACK', 'SIDE', 'BEVERAGE', 'DESSERT', name='producttypeenum'), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=True),
     sa.Column('price', sa.Integer(), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),

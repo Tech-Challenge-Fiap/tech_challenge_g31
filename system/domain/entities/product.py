@@ -12,6 +12,7 @@ class ProductEntity(BaseModel):
     prep_time: int
     description: Optional[str] = None
     image: Optional[str] = None
+    is_active: bool = True
 
     class Config:
         from_attributes = True

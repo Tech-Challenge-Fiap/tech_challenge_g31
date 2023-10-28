@@ -94,3 +94,26 @@ def update_product(product_id: int):
         return {"error": "Internal Error"}, 500
     product.response["type"] = product.response["type"].value
     return product.response, 200
+
+@app.route("/enable_product/<product_id>", methods=["PATCH"])
+def enable_product(product_id):
+    try:
+        product =products_usecase.EnableProductUseCase.execute(product_id=product_id)
+    except ProductDoesNotExistError:
+        return {"error": "This Product does not exist"}, 404
+    except InfrastructureError:
+        return {"error": "Internal Error"}, 500
+    product.response["type"] = product.response["type"].value
+    return product.response, 200
+
+@app.route("/get_deleted_products/", methods=["GET"])
+def get_deleted_products():
+    try:
+        products = products_usecase.GetDeletedProductsUseCase.execute()
+    except InfrastructureError:
+        return {"error": "Internal Error"}, 500
+    products_list = []
+    for product in products.response:
+        product.type=product.type.value
+        products_list.append(vars(product))
+    return products_list

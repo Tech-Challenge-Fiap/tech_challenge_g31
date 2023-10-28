@@ -95,3 +95,25 @@ class UpdateProductUseCase(UseCase, Resource):
         except NoObjectFoundError:
             raise ProductDoesNotExistError
         return UpdateProductResponse(product.model_dump())
+
+class EnableProductUseCase(UseCase, Resource):
+    def execute(product_id: int) -> None:
+        """Enable a product by its id"""
+        try:
+            product = ProductRepository.enable_product_by_id(product_id)
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
+        except NoObjectFoundError:
+            raise ProductDoesNotExistError
+        return UpdateProductResponse(product.model_dump())
+
+class GetDeletedProductsUseCase(UseCaseNoRequest, Resource):
+    def execute() -> GetAllProductsResponse:
+        """
+        Get products with filters
+        """
+        try:
+            response = ProductRepository.get_deleted_products()
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
+        return GetAllProductsResponse(response)

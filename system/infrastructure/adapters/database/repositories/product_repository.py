@@ -30,7 +30,7 @@ class ProductRepository(ProductPort):
         """Get a product by it's id"""
         try:
             product = (
-                db.session.query(ProductModel).filter_by(product_id=product_id).first()
+                db.session.query(ProductModel).filter_by(product_id=product_id, is_active = True).first()
             )
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
@@ -45,6 +45,7 @@ class ProductRepository(ProductPort):
             products = (
                 db.session.query(ProductModel)
                 .filter(ProductModel.product_id.in_(product_ids))
+                .filter(ProductModel.is_active == True)
                 .all()
             )
         except IntegrityError:
@@ -58,7 +59,7 @@ class ProductRepository(ProductPort):
     def get_products_by_type(cls, produc_type: int) -> List[ProductEntity]:
         """Get products by type"""
         try:
-            products = db.session.query(ProductModel).filter_by(type=produc_type).all()
+            products = db.session.query(ProductModel).filter_by(type=produc_type,  is_active = True).all()
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
         except DataError:
@@ -70,36 +71,35 @@ class ProductRepository(ProductPort):
     def get_all_products(cls) -> List[ProductEntity]:
         """Get all products"""
         try:
-            products = db.session.query(ProductModel).all()
+            products = db.session.query(ProductModel).filter_by(is_active = True).all()
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
         products_list = [ProductEntity.from_orm(product) for product in products]
         return products_list
 
     @classmethod
-    def delete_product_by_id(cls, product_id: int) -> bool:
+    def delete_product_by_id(cls, product_id: int) -> None:
         """Delete product by its id"""
         try:
             product = (
-                db.session.query(ProductModel).filter_by(product_id=product_id).first()
+                db.session.query(ProductModel).filter_by(product_id=product_id, is_active = True).first()
             )
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
         if not product:
             raise NoObjectFoundError
+        product.is_active = False
         try:
-            db.session.delete(product)
             db.session.commit()
         except IntegrityError as ex:
             raise PostgreSQLError("PostgreSQL Error")
-        return True
 
     @classmethod
     def update_product(cls, product_id: int, request: Dict[str, Any]) -> ProductEntity:
         """Update product"""
         try:
             product = (
-                db.session.query(ProductModel).filter_by(product_id=product_id).first()
+                db.session.query(ProductModel).filter_by(product_id=product_id, is_active = True).first()
             )
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
@@ -121,3 +121,31 @@ class ProductRepository(ProductPort):
         except Exception:
             raise ProductUpdateError
         return ProductEntity.from_orm(product)
+    
+    @classmethod
+    def enable_product_by_id(cls, product_id: int) -> ProductEntity:
+        """Enable product by its id"""
+        try:
+            product = (
+                db.session.query(ProductModel).filter_by(product_id=product_id).first()
+            )
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        if not product:
+            raise NoObjectFoundError
+        product.is_active = True
+        try:
+            db.session.commit()
+        except IntegrityError as ex:
+            raise PostgreSQLError("PostgreSQL Error")
+        return ProductEntity.from_orm(product)
+    
+    @classmethod
+    def get_deleted_products(cls) -> List[ProductEntity]:
+        """Get all products"""
+        try:
+            products = db.session.query(ProductModel).filter_by(is_active = False).all()
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        products_list = [ProductEntity.from_orm(product) for product in products]
+        return products_list

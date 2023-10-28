@@ -14,3 +14,4 @@ class ProductModel(db.Model):
     prep_time = db.Column(db.Integer)
     description = db.Column(db.Text, nullable=True)
     image = db.Column(db.String, nullable=True)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
