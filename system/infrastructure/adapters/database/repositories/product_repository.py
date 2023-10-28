@@ -19,11 +19,9 @@ class ProductRepository(ProductPort):
         product_to_insert = ProductModel(**product.model_dump())
         db.session.add(product_to_insert)
         db.session.commit()
-        inserted_product = (
-            db.session.query(ProductModel).filter_by(name=product.name).first()
-        )
-        inserted_product.type = inserted_product.type.value
-        return ProductEntity(**inserted_product.__dict__)
+        db.session.flush()
+        product_to_insert.type = product_to_insert.type.value
+        return ProductEntity.from_orm(product_to_insert)
 
     @classmethod
     def get_product_by_id(cls, product_id: int) -> ProductEntity:

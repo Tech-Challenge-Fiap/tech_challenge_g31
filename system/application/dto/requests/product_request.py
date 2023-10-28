@@ -20,7 +20,6 @@ class CreateProductRequest(ProductPayload):
 
 
 class UpdateProductRequest(BaseModel):
-    type: Optional[str] = None
     name: Optional[str] = None
     price: Optional[float] = None
     prep_time: Optional[int] = None
