@@ -55,6 +55,7 @@ class GetAllProductsUseCase(UseCaseNoRequest, Resource):
             response = ProductRepository.get_all_products()
         except PostgreSQLError as err:
             raise InfrastructureError(str(err))
+        response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)
 
 
@@ -69,6 +70,7 @@ class GetProductsByTypeUseCase(UseCase, Resource):
             raise InfrastructureError(str(err))
         except InvalidInputError:
             raise ProductTypeError
+        response = [r.model_dump() for r in response]
         return GetProductsByTypeResponse(response)
 
 
@@ -116,4 +118,5 @@ class GetDeletedProductsUseCase(UseCaseNoRequest, Resource):
             response = ProductRepository.get_deleted_products()
         except PostgreSQLError as err:
             raise InfrastructureError(str(err))
+        response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)

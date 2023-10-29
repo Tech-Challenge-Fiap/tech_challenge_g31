@@ -1,6 +1,6 @@
 from enum import Enum
 
-class OrderStatusEnum(Enum):
+class OrderStatusEnum(str, Enum):
     CANCELED = "CANCELED"
     TO_BE_PAYED = "WAITING PAYMENT"
     RECIEVED = "RECIEVED"
@@ -9,13 +9,13 @@ class OrderStatusEnum(Enum):
     COMPLETED = "COMPLETED"
 
 
-class ProductTypeEnum(Enum):
+class ProductTypeEnum(str, Enum):
     SNACK = "SNACK"
     SIDE = "SIDE"
     BEVERAGE = "BEVERAGE"
     DESSERT = "DESSERT"
 
 
-class PaymentStatusEnum(Enum):
+class PaymentStatusEnum(str, Enum):
     PAID = "PAID"
     UNPAID = "UNPAID"

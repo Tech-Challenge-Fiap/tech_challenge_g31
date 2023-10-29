@@ -22,8 +22,6 @@ def checkout_order(order_id):
         return {"error": "Internal Error"}, 500
     except OrderDoesNotExistError:
         return {"error": "This Order does not exist"}, 404
-    order.response["status"] = order.response["status"].value
-    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response
 
 
@@ -39,8 +37,6 @@ def create_order():
         return {"error": "Internal Error"}, 500
     except OrderDoesNotExistError:
         return {"error": "This Order does not exist"}, 404
-    order.response["status"] = order.response["status"].value
-    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response
 
 
@@ -52,8 +48,6 @@ def get_order_by_id(order_id):
         return {"error": "This Order does not exist"}, 404
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
-    order.response["status"] = order.response["status"].value
-    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response
 
 
@@ -63,9 +57,6 @@ def get_orders():
         orders = order_usecase.GetAllOrdersUseCase.execute()
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
-    for order in orders.response:
-        order["status"] = order["status"].value
-        order["payment"]["status"] = order["payment"]["status"].value
     return orders.response
 
 
@@ -85,6 +76,4 @@ def patch_order(order_id):
         return {"error": "Internal Error"}, 500
     except OrderUpdateError:
         return {"error": "This Order could not be updated"}, 400
-    order.response["status"] = order.response["status"].value
-    order.response["payment"]["status"] = order.response["payment"]["status"].value
     return order.response

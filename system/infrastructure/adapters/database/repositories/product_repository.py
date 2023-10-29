@@ -18,7 +18,6 @@ class ProductRepository(ProductPort):
         try:
             db.session.commit()
             db.session.flush()
-            product_to_insert.type = product_to_insert.type.value
         except IntegrityError as error:
             if isinstance(error.orig, UniqueViolation):
                 raise ProductAlreadyExistsError
