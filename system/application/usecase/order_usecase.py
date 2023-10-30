@@ -10,6 +10,7 @@ from system.application.dto.responses.order_response import (
 )
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.exceptions.order_exceptions import OrderDoesNotExistError, OrderUpdateError
+from system.application.exceptions.product_exceptions import ProductDoesNotExistError
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.order import OrderEntity
 from system.domain.entities.payment import PaymentEntity
@@ -24,22 +25,27 @@ class CreateOrderUseCase(UseCase, Resource):
         """
         Create Order
         """
+        products_ids = [p.product_id for p in request.products]
         try:
-            products = ProductRepository.get_products_by_ids(request.products)
+            products = ProductRepository.get_products_by_ids(products_ids)
+            products_map = {p.product_id: p for p in products}
         except PostgreSQLError as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise OrderDoesNotExistError
         order_price = 0
         order_waiting_time = 0
-        for p in products:
-            order_price += p.price
-            order_waiting_time += p.prep_time
+        for p in request.products:
+            product = products_map.get(p.product_id)
+            if not product:
+                raise ProductDoesNotExistError
+            order_price += product.price * p.quantity
+            order_waiting_time += product.prep_time * p.quantity
         try:
             payment = PaymentRepository.create_payment()
             order = OrderEntity(
                 price=order_price,
-                products_ids=request.products,
+                products=request.products,
                 waiting_time=order_waiting_time,
                 client_id=request.client_cpf,
                 payment=payment,

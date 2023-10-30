@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from system.application.dto.requests.payment_request import PaymentRequest
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.exceptions.order_exceptions import OrderDoesNotExistError, OrderUpdateError
+from system.application.exceptions.product_exceptions import ProductDoesNotExistError
 from system.application.usecase import order_usecase
 from system.application.dto.requests.order_request import (
     CreateOrderRequest,
@@ -37,6 +38,8 @@ def create_order():
         return {"error": "Internal Error"}, 500
     except OrderDoesNotExistError:
         return {"error": "This Order does not exist"}, 404
+    except ProductDoesNotExistError:
+        return {"error": "Product does not exist"}, 400
     return order.response
 
 
