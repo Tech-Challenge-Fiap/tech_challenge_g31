@@ -30,25 +30,27 @@ class OrderRepository(OrderPort):
 
         try:
             # CREATING ORDER IN DATABASE
-            # FLUSH TO REFRESH order_to_insert WITH ORDER_ID
             db.session.add(order_to_insert)
-            db.session.commit()
             db.session.flush()
         except IntegrityError:
+            db.session.rollback()
             raise PostgreSQLError("PostgreSQL Error")
-            # GETTING PRODUCTS TO POPULATE ORDER 
+
         try:
+            # GETTING PRODUCTS TO POPULATE ORDER
             products = (
                 db.session.query(ProductModel)
                 .filter(ProductModel.product_id.in_(order.products_ids))
                 .all()
             )
         except IntegrityError:
+            db.session.rollback()
             raise PostgreSQLError("PostgreSQL Error")
-        #Counts how many times each product was ordered
+
+        # Counts how many times each product was ordered
         product_count = Counter(order.products_ids)
         order_products = []
-        # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
+
         for product_data in products:
             order_product = OrderProductModel(
                 order_id=order_to_insert.order_id,
@@ -60,12 +62,14 @@ class OrderRepository(OrderPort):
                 quantity=product_count[product_data.product_id]
             )
             order_products.append(order_product)
+
         try:
             db.session.add_all(order_products)
             db.session.commit()
         except IntegrityError:
+            db.session.rollback()
             raise PostgreSQLError("PostgreSQL Error")
-        
+
         order_to_insert.products_ids = order.products_ids
         return OrderEntity.from_orm(order_to_insert)
 
