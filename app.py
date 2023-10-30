@@ -11,6 +11,7 @@ db_host = os.environ.get("POSTGRES_HOST", "localhost")
 app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
+# app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://myappuser:myapppassword@db/myappdb'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
