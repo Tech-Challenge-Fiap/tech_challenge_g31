@@ -1,5 +1,6 @@
 from collections import Counter
 from typing import List
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 from system.application.exceptions.order_exceptions import OrderUpdateError
 from system.application.ports.order_port import OrderPort
@@ -70,46 +71,33 @@ class OrderRepository(OrderPort):
 
     @classmethod
     def get_order_by_id(cls, order_id: int) -> OrderEntity:
-        """Get a order by it's id"""
+        """Get an order by its id"""
         try:
-            order = db.session.query(OrderModel).filter_by(order_id=order_id).first()
+            order = (
+                db.session.query(OrderModel)
+                .filter_by(order_id=order_id)
+                .options(joinedload(OrderModel.payment), joinedload(OrderModel.products))
+                .first()
+            )
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
         if not order:
             raise NoObjectFoundError
-        try:
-            order_products = db.session.query(OrderProductModel).filter_by(order_id=order_id).all()
-        except IntegrityError:
-            raise PostgreSQLError("PostgreSQL Error")
-        product_list = []
-        for product in order_products:
-            product_list.append(BasicProductEntity.from_orm(product))
-        order_dict = order.__dict__
-        order_dict["payment"] = order.payment
-        order_dict["products"] = product_list
-        return OrderEntity.from_orm(order_dict)
+        order_entity = OrderEntity.from_orm(order)
+        return order_entity
 
     @classmethod
     def get_all_orders(cls) -> List[OrderEntity]:
         """Get all orders"""
         try:
-            orders = db.session.query(OrderModel).all()
+            orders = (
+                db.session.query(OrderModel)
+                .options(joinedload(OrderModel.payment), joinedload(OrderModel.products))
+                .all()
+            )
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
-        orders_dict = []
-        for order in orders:
-            try:
-                order_products = db.session.query(OrderProductModel).filter_by(order_id=order.order_id).all()
-            except IntegrityError:
-                raise PostgreSQLError("PostgreSQL Error")
-            product_list = []
-            for product in order_products:
-                product_list.append(BasicProductEntity.from_orm(product))
-            order_dict = order.__dict__
-            order_dict["payment"] = order.payment
-            order_dict["products"] = product_list
-            orders_dict.append(order_dict)
-        orders_list = [OrderEntity.from_orm(order) for order in orders_dict]
+        orders_list = [OrderEntity.from_orm(order) for order in orders]
         return orders_list
 
     @classmethod
