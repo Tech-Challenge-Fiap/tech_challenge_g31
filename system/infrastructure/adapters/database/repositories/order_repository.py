@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from system.application.exceptions.order_exceptions import OrderUpdateError
 from system.application.ports.order_port import OrderPort
 from system.domain.entities.order import OrderEntity
+from system.domain.entities.product import BasicProductEntity
 from system.domain.enums.enums import OrderStatusEnum
 from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
 from system.infrastructure.adapters.database.models import db
@@ -82,10 +83,11 @@ class OrderRepository(OrderPort):
             raise PostgreSQLError("PostgreSQL Error")
         product_list = []
         for product in order_products:
-            for _ in range(product.quantity):
-                product_list.append(product.product_id)
-        order.products_ids = product_list
-        return OrderEntity.from_orm(order)
+            product_list.append(BasicProductEntity.from_orm(product))
+        order_dict = order.__dict__
+        order_dict["payment"] = order.payment
+        order_dict["products"] = product_list
+        return OrderEntity.from_orm(order_dict)
 
     @classmethod
     def get_all_orders(cls) -> List[OrderEntity]:
@@ -94,7 +96,7 @@ class OrderRepository(OrderPort):
             orders = db.session.query(OrderModel).all()
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
-        
+        orders_dict = []
         for order in orders:
             try:
                 order_products = db.session.query(OrderProductModel).filter_by(order_id=order.order_id).all()
@@ -102,10 +104,12 @@ class OrderRepository(OrderPort):
                 raise PostgreSQLError("PostgreSQL Error")
             product_list = []
             for product in order_products:
-                for _ in range(product.quantity):
-                    product_list.append(product.product_id)
-            order.products_ids = product_list
-        orders_list = [OrderEntity.from_orm(order) for order in orders]
+                product_list.append(BasicProductEntity.from_orm(product))
+            order_dict = order.__dict__
+            order_dict["payment"] = order.payment
+            order_dict["products"] = product_list
+            orders_dict.append(order_dict)
+        orders_list = [OrderEntity.from_orm(order) for order in orders_dict]
         return orders_list
 
     @classmethod

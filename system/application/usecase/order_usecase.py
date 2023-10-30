@@ -45,7 +45,7 @@ class CreateOrderUseCase(UseCase, Resource):
                 price=order_price,
                 products_ids=request.products,
                 waiting_time=order_waiting_time,
-                client_id=request.client_cpf,
+                client_id=request.client_id,
                 payment=payment,
             )
             response = OrderRepository.create_order(order)
