@@ -12,4 +12,4 @@ class OrderProductModel(db.Model):
     name = db.Column(db.String(50), nullable=True)
     price = db.Column(db.Integer, nullable=True)
     description = db.Column(db.Text, nullable=True)
-    quantity = db.Column(db.Integer, nullable=True)
+    quantity = db.Column(db.Integer, nullable=False)
