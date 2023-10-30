@@ -6,7 +6,7 @@ from system.domain.enums.enums import OrderStatusEnum
 
 class CreateOrderRequest(BaseModel):
     products: List[int]
-    client_cpf: Optional[str] = None
+    client_id: Optional[str] = None
 
     class Config:
         from_attributes = True
