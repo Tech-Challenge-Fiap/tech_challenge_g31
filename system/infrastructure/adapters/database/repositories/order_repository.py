@@ -2,7 +2,7 @@ from typing import List
 from sqlalchemy.exc import IntegrityError
 from system.application.exceptions.order_exceptions import OrderUpdateError
 from system.application.ports.order_port import OrderPort
-from system.domain.entities.order import OrderEntity
+from system.domain.entities.order import OrderEntity, OrderProductEntity
 from system.domain.enums.enums import OrderStatusEnum
 from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
 from system.infrastructure.adapters.database.models import db
@@ -34,17 +34,21 @@ class OrderRepository(OrderPort):
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
             # GETTING PRODUCTS TO POPULATE ORDER 
+        products_ids = [p.product_id for p in order.products]
         try:
             products = (
                 db.session.query(ProductModel)
-                .filter(ProductModel.product_id.in_(order.products_ids))
+                .filter(ProductModel.product_id.in_(products_ids))
                 .all()
             )
+            products_map = {p.product_id: p for p in products}
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
-        order_products = []
+        order_products_to_insert = []
+        order_products_entities = []
         # THIS FOR IS GETTING PRODUCT ON BY ONE AND APPENDING IN ORDER_PRODUCT
-        for product_data in products:
+        for product_to_order in order.products:
+            product_data = products_map.get(product_to_order.product_id)
             order_product = OrderProductModel(
                 order_id=order_to_insert.order_id,
                 product_id=product_data.product_id,
@@ -52,17 +56,19 @@ class OrderRepository(OrderPort):
                 name=product_data.name,
                 price=product_data.price,
                 description=product_data.description,
+                quantity=product_to_order.quantity
             )
-            order_products.append(order_product)
-
+            order_products_to_insert.append(order_product)
+            order_products_entities.append(OrderProductEntity.from_orm(order_product))
         try:
-            db.session.add_all(order_products)
+            db.session.add_all(order_products_to_insert)
             db.session.commit()
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
         
-        order_to_insert.products_ids = order.products_ids
-        return OrderEntity.from_orm(order_to_insert)
+        response = OrderEntity.from_orm(order_to_insert)
+        response.products = order_products_entities
+        return response
 
     @classmethod
     def get_order_by_id(cls, order_id: int) -> OrderEntity:
@@ -79,9 +85,10 @@ class OrderRepository(OrderPort):
             raise PostgreSQLError("PostgreSQL Error")
         product_list = []
         for product in order_products:
-            product_list.append(product.product_id)
-        order.products_ids = product_list
-        return OrderEntity.from_orm(order)
+            product_list.append(OrderProductEntity.from_orm(product))
+        response = OrderEntity.from_orm(order)
+        response.products = product_list
+        return response
 
     @classmethod
     def get_all_orders(cls) -> List[OrderEntity]:
@@ -91,6 +98,7 @@ class OrderRepository(OrderPort):
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
         
+        response = []
         for order in orders:
             try:
                 order_products = db.session.query(OrderProductModel).filter_by(order_id=order.order_id).all()
@@ -98,11 +106,12 @@ class OrderRepository(OrderPort):
                 raise PostgreSQLError("PostgreSQL Error")
             product_list = []
             for product in order_products:
-                product_list.append(product.product_id)
-            order.products_ids = product_list
+                product_list.append(OrderProductEntity.from_orm(product))
+            order_entity = OrderEntity.from_orm(order)
+            order_entity.products = product_list
+            response.append(order_entity)
 
-        orders_list = [OrderEntity.from_orm(order) for order in orders]
-        return orders_list
+        return response
 
     @classmethod
     def update_order_status(cls, order_id: int, status: OrderStatusEnum) -> OrderEntity:
@@ -114,7 +123,7 @@ class OrderRepository(OrderPort):
             raise PostgreSQLError("PostgreSQL Error")
         product_list = []
         for product in order_products:
-            product_list.append(product.product_id)
+            product_list.append(OrderProductEntity.from_orm(product))
         if not order:
             raise NoObjectFoundError
         try:
@@ -122,6 +131,6 @@ class OrderRepository(OrderPort):
             db.session.commit()
         except IntegrityError:
             raise OrderUpdateError
-        
-        order.products_ids = product_list
-        return OrderEntity.from_orm(order)
+        response = OrderEntity.from_orm(order)
+        response.products = product_list
+        return response

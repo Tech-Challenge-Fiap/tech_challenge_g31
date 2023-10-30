@@ -1,11 +1,12 @@
 from typing import List, Optional
 from pydantic import BaseModel
+from system.domain.entities.order import OrderProductEntity
 
 from system.domain.enums.enums import OrderStatusEnum
 
 
 class CreateOrderRequest(BaseModel):
-    products: List[int]
+    products: List[OrderProductEntity]
     client_cpf: Optional[str] = None
 
     class Config:
