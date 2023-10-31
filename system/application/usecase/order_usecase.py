@@ -32,6 +32,11 @@ class CreateOrderUseCase(UseCase, Resource):
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise OrderDoesNotExistError
+        # Verifique se todos os product_ids da requisição estão na lista de produtos disponíveis
+        gotten_product_ids = [product.product_id for product in products]
+        for product_id in request.products:
+            if product_id not in gotten_product_ids:
+                raise ProductDoesNotExistError
         #Counts how many times each product was ordered
         product_count = Counter(request.products)
         order_price = 0
