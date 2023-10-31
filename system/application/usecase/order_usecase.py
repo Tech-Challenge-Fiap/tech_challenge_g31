@@ -1,4 +1,5 @@
 from flask_restful import Resource
+from collections import Counter
 from psycopg2 import IntegrityError
 from system.application.dto.requests.order_request import CreateOrderRequest
 from system.application.dto.requests.payment_request import PaymentRequest
@@ -25,29 +26,31 @@ class CreateOrderUseCase(UseCase, Resource):
         """
         Create Order
         """
-        products_ids = [p.product_id for p in request.products]
         try:
-            products = ProductRepository.get_products_by_ids(products_ids)
-            products_map = {p.product_id: p for p in products}
+            products = ProductRepository.get_products_by_ids(request.products)
         except PostgreSQLError as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise OrderDoesNotExistError
+        # Verifique se todos os product_ids da requisição estão na lista de produtos disponíveis
+        gotten_product_ids = [product.product_id for product in products]
+        for product_id in request.products:
+            if product_id not in gotten_product_ids:
+                raise ProductDoesNotExistError
+        #Counts how many times each product was ordered
+        product_count = Counter(request.products)
         order_price = 0
         order_waiting_time = 0
-        for p in request.products:
-            product = products_map.get(p.product_id)
-            if not product:
-                raise ProductDoesNotExistError
-            order_price += product.price * p.quantity
-            order_waiting_time += product.prep_time * p.quantity
+        for product in products:
+            order_price += product.price * product_count[product.product_id]
+            order_waiting_time += product.prep_time * product_count[product.product_id]
         try:
             payment = PaymentRepository.create_payment()
             order = OrderEntity(
                 price=order_price,
-                products=request.products,
+                products_ids=request.products,
                 waiting_time=order_waiting_time,
-                client_id=request.client_cpf,
+                client_id=request.client_id,
                 payment=payment,
             )
             response = OrderRepository.create_order(order)

@@ -1,15 +1,14 @@
 from datetime import datetime
 from typing import List, Optional
 from flask import Response
+from system.domain.entities.product import BasicProductEntity
 
 from system.domain.enums.enums import OrderStatusEnum
-
-
 
 class OrderResponse(Response):
     order_id: int
     order_date: datetime
-    products: List[int]
+    products: List[BasicProductEntity]
     status: OrderStatusEnum
     waiting_time: int
     client_id: Optional[str]
