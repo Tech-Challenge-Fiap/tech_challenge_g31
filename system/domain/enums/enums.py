@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class OrderStatusEnum(str, Enum):
     CANCELED = "CANCELED"
     TO_BE_PAYED = "WAITING PAYMENT"
@@ -19,3 +20,4 @@ class ProductTypeEnum(str, Enum):
 class PaymentStatusEnum(str, Enum):
     PAID = "PAID"
     UNPAID = "UNPAID"
+    CANCELLED = "CANCELLED"

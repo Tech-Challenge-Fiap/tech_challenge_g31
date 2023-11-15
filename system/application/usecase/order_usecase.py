@@ -10,16 +10,29 @@ from system.application.dto.responses.order_response import (
     UpdateOrderResponse,
 )
 from system.application.exceptions.default_exceptions import InfrastructureError
-from system.application.exceptions.order_exceptions import OrderDoesNotExistError, OrderUpdateError
+from system.application.exceptions.order_exceptions import (
+    OrderDoesNotExistError,
+    OrderUpdateError,
+)
 from system.application.exceptions.product_exceptions import ProductDoesNotExistError
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.order import OrderEntity
-from system.domain.entities.payment import PaymentEntity
 from system.domain.enums.enums import OrderStatusEnum, PaymentStatusEnum
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
-from system.infrastructure.adapters.database.repositories.order_repository import OrderRepository
-from system.infrastructure.adapters.database.repositories.payment_repository import PaymentRepository
-from system.infrastructure.adapters.database.repositories.product_repository import ProductRepository
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import (
+    NoObjectFoundError,
+    PostgreSQLError,
+)
+from system.infrastructure.adapters.database.repositories.order_repository import (
+    OrderRepository,
+)
+from system.infrastructure.adapters.database.repositories.payment_repository import (
+    PaymentRepository,
+)
+from system.infrastructure.adapters.database.repositories.product_repository import (
+    ProductRepository,
+)
+from system.infrastructure.adapters.external_tools.mercado_pago import MercadoPago, MercadoPagoError
+
 
 class CreateOrderUseCase(UseCase, Resource):
     def execute(request: CreateOrderRequest) -> CreateOrderResponse:
@@ -37,7 +50,7 @@ class CreateOrderUseCase(UseCase, Resource):
         for product_id in request.products:
             if product_id not in gotten_product_ids:
                 raise ProductDoesNotExistError
-        #Counts how many times each product was ordered
+        # Counts how many times each product was ordered
         product_count = Counter(request.products)
         order_price = 0
         order_waiting_time = 0
@@ -46,6 +59,11 @@ class CreateOrderUseCase(UseCase, Resource):
             order_waiting_time += product.prep_time * product_count[product.product_id]
         try:
             payment = PaymentRepository.create_payment()
+            pix_payment = MercadoPago.create_qr_code_pix_payment(payment.id)
+            payment = PaymentRepository.update_payment_qrcode(payment.id, pix_payment["qr_data"])
+        except PostgreSQLError:
+            raise InfrastructureError(str(err))
+        try:
             order = OrderEntity(
                 price=order_price,
                 products_ids=request.products,
@@ -57,12 +75,15 @@ class CreateOrderUseCase(UseCase, Resource):
         except PostgreSQLError as err:
             raise InfrastructureError(str(err))
         return CreateOrderResponse(response.model_dump())
-    
+
+
 class CheckoutOrderUseCase(UseCase, Resource):
-    def execute(order_id: int, request:PaymentRequest) -> UpdateOrderResponse:
+    def execute(order_id: int, request: PaymentRequest) -> UpdateOrderResponse:
         try:
-            order = OrderRepository.get_order_by_id(order_id = order_id)
-            payment = PaymentRepository.update_payment(payment_id=order.payment.id, payment_status=request.status)
+            order = OrderRepository.get_order_by_id(order_id=order_id)
+            payment = PaymentRepository.update_payment_status(
+                payment_id=order.payment.id, payment_status=request.status
+            )
             order.payment = payment
 
             if payment.status == PaymentStatusEnum.PAID:
@@ -70,12 +91,15 @@ class CheckoutOrderUseCase(UseCase, Resource):
             elif payment.status == PaymentStatusEnum.UNPAID:
                 updated_order_status = OrderStatusEnum.CANCELED
 
-            order = OrderRepository.update_order_status(order_id = order_id, status= updated_order_status)
+            order = OrderRepository.update_order_status(
+                order_id=order_id, status=updated_order_status
+            )
         except IntegrityError as err:
             raise OrderUpdateError(str(err))
         except NoObjectFoundError:
             raise OrderDoesNotExistError
         return UpdateOrderResponse(order.model_dump())
+
 
 class GetOrderByIDUseCase(UseCase, Resource):
     def execute(order_id: int) -> GetOrderByIDResponse:

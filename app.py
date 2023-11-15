@@ -29,4 +29,4 @@ if __name__ == '__main__':
     app.run()
 
 #Importing views
-from system.adapters_entrypoints.api.routes import client_views, product_views, order_views
+from system.adapters_entrypoints.api.routes import client_views, product_views, order_views, payment_views

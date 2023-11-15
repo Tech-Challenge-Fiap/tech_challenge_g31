@@ -3,7 +3,8 @@ from typing import List, Optional
 from flask import Response
 from system.domain.entities.product import BasicProductEntity
 
-from system.domain.enums.enums import OrderStatusEnum
+from system.domain.enums.enums import OrderStatusEnum, PaymentStatusEnum
+
 
 class OrderResponse(Response):
     order_id: int
@@ -33,3 +34,15 @@ class GetAllOrdersResponse(OrderResponse):
 
 class UpdateOrderResponse(OrderResponse):
     pass
+
+
+class CheckOrderPaymentResponse(Response):
+    id: int
+    payment_status: PaymentStatusEnum
+    qr_code: str
+    status_updated_at: Optional[datetime]
+    status: str
+
+    class Config:
+        from_attributes = True
+        use_enum_values = True

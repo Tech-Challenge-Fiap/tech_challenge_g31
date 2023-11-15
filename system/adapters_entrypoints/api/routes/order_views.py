@@ -3,13 +3,17 @@ from flask import request
 from pydantic import ValidationError
 from system.application.dto.requests.payment_request import PaymentRequest
 from system.application.exceptions.default_exceptions import InfrastructureError
-from system.application.exceptions.order_exceptions import OrderDoesNotExistError, OrderUpdateError
+from system.application.exceptions.order_exceptions import (
+    OrderDoesNotExistError,
+    OrderUpdateError,
+)
 from system.application.exceptions.product_exceptions import ProductDoesNotExistError
-from system.application.usecase import order_usecase
+from system.application.usecase import order_usecase, payment_usecase
 from system.application.dto.requests.order_request import (
     CreateOrderRequest,
     UpdateOrderStatusRequest,
 )
+
 
 @app.route("/checkout/<order_id>", methods=["PATCH"])
 def checkout_order(order_id):
@@ -18,7 +22,9 @@ def checkout_order(order_id):
     except ValidationError as ex:
         return ex.errors(), 400
     try:
-          order = order_usecase.CheckoutOrderUseCase.execute(order_id=order_id, request=mercado_pago_request)
+        order = order_usecase.CheckoutOrderUseCase.execute(
+            order_id=order_id, request=mercado_pago_request
+        )
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     except OrderDoesNotExistError:
@@ -79,4 +85,15 @@ def patch_order(order_id):
         return {"error": "Internal Error"}, 500
     except OrderUpdateError:
         return {"error": "This Order could not be updated"}, 400
+    return order.response
+
+
+@app.route("/update_order_payment/<order_id>", methods=["PATCH"])
+def check_order_payment(order_id):
+    try:
+        order = payment_usecase.UpdateOrderPaymentUseCase.execute(order_id=order_id)
+    except OrderDoesNotExistError:
+        return "This Order does not exist", 400
+    except InfrastructureError:
+        return {"error": "Internal Error"}, 500
     return order.response
