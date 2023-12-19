@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiaptechchallenge
+spec:
+  selector:
+    matchLabels:
+      app: fiaptechchallenge
+  template:
+    metadata:
+      labels:
+        app: fiaptechchallenge
+    spec:
+      containers:
+      - name: fiaptechchallenge
+        image: barbosaleandro/tech-challenge:1.1
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 5000
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: dbname
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: password
