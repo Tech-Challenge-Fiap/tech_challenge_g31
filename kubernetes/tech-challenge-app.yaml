@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: fiaptechchallenge
-        image: barbosaleandro/tech-challenge:1.2
+        image: barbosaleandro/tech-challenge:1.2.1
         resources:
           limits:
             memory: "128Mi"
