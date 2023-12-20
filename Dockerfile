@@ -8,7 +8,9 @@ WORKDIR /app
 COPY requirements.txt .
 
 COPY system system
+COPY migrations migrations
 COPY app.py .
+COPY docker/* /usr/bin/
 
 # Instale as dependências da aplicação
 RUN pip install --no-cache-dir -r requirements.txt
@@ -17,4 +19,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 # Comando para iniciar a aplicação Flask em modo de desenvolvimento
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000", "--reload"]
+CMD ["start.sh"]
