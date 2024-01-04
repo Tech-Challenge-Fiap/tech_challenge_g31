@@ -7,10 +7,9 @@ metadata:
     app: flask-app
 spec:
   ports:
-  - protocol: TCP
-    port: 80
+  - port: 80
     targetPort: 5000
+    nodePort: 30100
   selector:
     app: fiaptechchallenge
-  type: LoadBalancer
-  loadBalancerIP: ""
+  type: NodePort
