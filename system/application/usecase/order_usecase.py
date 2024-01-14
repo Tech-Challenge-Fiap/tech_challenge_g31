@@ -144,3 +144,16 @@ class UpdateOrderStatusUseCase(UseCase, Resource):
         except NoObjectFoundError:
             raise OrderDoesNotExistError
         return UpdateOrderResponse(response.model_dump())
+    
+class GetOrdersUseCase(UseCaseNoRequest, Resource):
+    def execute() -> GetAllOrdersResponse:
+        """
+        Get orders with filters
+        """
+        try:
+            response = OrderRepository.get_all_active_orders()
+        except PostgreSQLError as err:
+            raise InfrastructureError(str(err))
+
+        orders = [r.model_dump() for r in response]
+        return GetAllOrdersResponse(orders)

@@ -1,5 +1,6 @@
 from collections import Counter
 from typing import List
+from sqlalchemy import case
 from sqlalchemy.exc import IntegrityError
 from system.application.exceptions.order_exceptions import OrderUpdateError
 from system.application.ports.order_port import OrderPort
@@ -133,3 +134,38 @@ class OrderRepository(OrderPort):
             raise OrderUpdateError
         order.products_ids = product_list
         return OrderEntity.from_orm(order)
+    
+    @classmethod
+    def get_all_active_orders(cls) -> List[OrderEntity]:
+        """Get all orders"""
+        try:
+            custom_order = case(
+                (OrderModel.status == 'READY', 0),
+                (OrderModel.status == 'PREPARING', 1),
+                (OrderModel.status == 'RECIEVED', 2),
+                else_=3
+            )
+            
+            orders = (
+                db.session.query(OrderModel)
+                .filter(OrderModel.status.in_(['READY', 'PREPARING', 'RECIEVED']))
+                .order_by(custom_order, OrderModel.order_date)
+                .all()
+            )
+        except IntegrityError:
+            raise PostgreSQLError("PostgreSQL Error")
+        orders_dict = []
+        for order in orders:
+            try:
+                order_products = db.session.query(OrderProductModel).filter_by(order_id=order.order_id).all()
+            except IntegrityError:
+                raise PostgreSQLError("PostgreSQL Error")
+            product_list = []
+            for product in order_products:
+                product_list.append(BasicProductEntity.from_orm(product))
+            order_dict = order.__dict__
+            order_dict["payment"] = order.payment
+            order_dict["products"] = product_list
+            orders_dict.append(order_dict)
+        orders_list = [OrderEntity.from_orm(order) for order in orders_dict]
+        return orders_list

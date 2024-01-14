@@ -97,3 +97,11 @@ def check_order_payment(order_id):
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return order.response
+
+@app.route("/get_active_orders/", methods=["GET"])
+def get_active_orders():
+    try:
+        orders = order_usecase.GetOrdersUseCase.execute()
+    except InfrastructureError:
+        return {"error": "Internal Error"}, 500
+    return orders.response
