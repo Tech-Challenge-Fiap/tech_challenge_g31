@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiaptechchallenge
+spec:
+  selector:
+    matchLabels:
+      app: fiaptechchallenge
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fiaptechchallenge
+    spec:
+      containers:
+      - name: fiaptechchallenge
+        image: barbosaleandro/tech-challenge:1.2.2
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        ports:
+          - containerPort: 5000
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        startupProbe:
+          httpGet:
+            path: /ping
+            port: 5000
+          failureThreshold: 3
+          periodSeconds: 30
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: dbname
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: password

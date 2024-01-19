@@ -7,7 +7,7 @@ app = Flask(__name__)
 db_name = os.environ.get("POSTGRES_DB", "myappdb")
 db_user = os.environ.get("POSTGRES_USER", "myappuser")
 db_pass = os.environ.get("POSTGRES_PASSWORD", "myapppassword")
-db_host = os.environ.get("POSTGRES_HOST", "localhost")
+db_host = os.environ.get("POSTGRES_SERVICE_HOST", "localhost")
 app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
@@ -29,4 +29,4 @@ if __name__ == '__main__':
     app.run()
 
 #Importing views
-from system.adapters_entrypoints.api.routes import client_views, product_views, order_views, payment_views
+from system.adapters_entrypoints.api.routes import client_views, product_views, order_views, payment_views, general_view
