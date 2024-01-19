@@ -8,6 +8,11 @@ services:
       POSTGRES_PASSWORD: myapppassword  # Senha do banco de dados
     ports:
       - "5432:5432"  # Mapeie a porta do PostgreSQL do contêiner para a porta do host
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U myappuser -d myappdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   web:
     build:
       context: .
@@ -20,7 +25,8 @@ services:
       POSTGRES_DB: myappdb  # Nome do banco de dados
       POSTGRES_USER: myappuser  # Nome de usuário do banco de dados
       POSTGRES_PASSWORD: myapppassword  # Senha do banco de dados
-      POSTGRES_HOST: db  # Senha do banco de dados
+      POSTGRES_SERVICE_HOST: db  # Senha do banco de dados
       FLASK_ENV: development  # Configuração da variável de ambiente FLASK_ENV
     depends_on:
-      - db  # Aguarde o serviço do banco de dados PostgreSQL
+      db:  # Aguarde o serviço do banco de dados PostgreSQL
+        condition: service_healthy
