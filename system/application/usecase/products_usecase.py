@@ -12,11 +12,10 @@ from system.application.dto.responses.product_response import (
 )
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.exceptions.product_exceptions import ProductDoesNotExistError, ProductTypeError
-from system.application.exceptions.repository_exceptions import RepositoryExeption
+from system.application.exceptions.repository_exceptions import DataRepositoryExeption, InvalidInputError, NoObjectFoundError
 from system.application.ports.product_port import ProductPort
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.product import ProductEntity
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import InvalidInputError, NoObjectFoundError
 
 
 class CreateProductUseCase(UseCase, Resource):
@@ -27,7 +26,7 @@ class CreateProductUseCase(UseCase, Resource):
         product = ProductEntity(**request.model_dump())
         try:
             response = product_repository.create_product(product)
-        except RepositoryExeption as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
 
         return CreateProductResponse(response.model_dump())
@@ -42,7 +41,7 @@ class GetProductByIDUseCase(UseCase, Resource):
             response = product_repository.get_product_by_id(product_id)
         except NoObjectFoundError:
             raise ProductDoesNotExistError
-        except RepositoryExeption as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         return GetProductByIDResponse(response.model_dump())
 
@@ -54,7 +53,7 @@ class GetAllProductsUseCase(UseCaseNoRequest, Resource):
         """
         try:
             response = product_repository.get_all_products()
-        except RepositoryExeption as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)
@@ -67,7 +66,7 @@ class GetProductsByTypeUseCase(UseCase, Resource):
         """
         try:
             response = product_repository.get_products_by_type(product_type)
-        except RepositoryExeption as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         except InvalidInputError:
             raise ProductTypeError
@@ -80,7 +79,7 @@ class DeleteProductUseCase(UseCase, Resource):
         """Delete a product by its id"""
         try:
             product_repository.delete_product_by_id(product_id)
-        except RepositoryExeption as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
@@ -94,10 +93,10 @@ class UpdateProductUseCase(UseCase, Resource):
         """Update product"""
         try:
             product = product_repository.update_product(product_id, request)
-        except RepositoryExeption as err:
-            raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         return UpdateProductResponse(product.model_dump())
 
 class EnableProductUseCase(UseCase, Resource):
@@ -105,7 +104,7 @@ class EnableProductUseCase(UseCase, Resource):
         """Enable a product by its id"""
         try:
             product = product_repository.enable_product_by_id(product_id)
-        except RepositoryExeption as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
@@ -118,7 +117,7 @@ class GetDeletedProductsUseCase(UseCaseNoRequest, Resource):
         """
         try:
             response = product_repository.get_deleted_products()
-        except RepositoryExeption as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)

@@ -9,11 +9,9 @@ from system.application.exceptions.payment_exceptions import PaymentDoesNotExist
 from system.application.ports.order_port import OrderPort
 from system.application.ports.payment_port import PaymentPort
 from system.application.ports.payment_service_port import PaymentService
+from system.application.exceptions.repository_exceptions import NoObjectFoundError
 from system.application.usecase.usecases import UseCase
 from system.domain.enums.enums import OrderStatusEnum, PaymentStatusEnum
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import (
-    NoObjectFoundError,
-)
 
 
 class UpdateOrderPaymentUseCase(UseCase, Resource):

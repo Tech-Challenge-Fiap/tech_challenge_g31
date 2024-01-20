@@ -4,10 +4,8 @@ from psycopg2 import IntegrityError
 from system.application.ports.payment_port import PaymentPort
 from system.domain.entities.payment import PaymentEntity
 from system.domain.enums.enums import PaymentStatusEnum
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import (
-    NoObjectFoundError,
-    PostgreSQLError,
-)
+from system.application.exceptions.repository_exceptions import NoObjectFoundError
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import PostgreSQLError
 from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.payment_model import PaymentModel
 

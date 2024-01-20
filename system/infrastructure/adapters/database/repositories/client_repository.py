@@ -4,7 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from system.application.exceptions.client_exceptions import ClientAlreadyExistsError
 from system.application.ports.client_port import ClientPort
 from system.domain.entities.client import ClientEntity
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
+from system.application.exceptions.repository_exceptions import NoObjectFoundError
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import PostgreSQLError
 from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.client_model import ClientModel
 

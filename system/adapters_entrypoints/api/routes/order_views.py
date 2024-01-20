@@ -19,7 +19,7 @@ from system.infrastructure.adapters.database.repositories.product_repository imp
 from system.infrastructure.adapters.external_tools.mercado_pago import MercadoPago
 
 
-@app.route("/checkout/<order_id>", methods=["PATCH"])
+@app.route("/update_status/<order_id>", methods=["PATCH"])
 def checkout_order(order_id):
     try:
         mercado_pago_request = PaymentRequest(**request.get_json())

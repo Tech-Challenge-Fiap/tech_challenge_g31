@@ -7,7 +7,8 @@ from system.application.ports.order_port import OrderPort
 from system.domain.entities.order import OrderEntity
 from system.domain.entities.product import BasicProductEntity
 from system.domain.enums.enums import OrderStatusEnum
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
+from system.application.exceptions.repository_exceptions import NoObjectFoundError
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import PostgreSQLError
 from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.order_model import OrderModel
 from system.infrastructure.adapters.database.models.order_product_model import (

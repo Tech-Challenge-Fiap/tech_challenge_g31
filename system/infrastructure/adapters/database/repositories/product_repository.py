@@ -4,7 +4,8 @@ from psycopg2.errors import UniqueViolation
 from system.application.exceptions.product_exceptions import ProductAlreadyExistsError, ProductUpdateError
 from system.application.ports.product_port import ProductPort
 from system.domain.entities.product import ProductEntity
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import InvalidInputError, NoObjectFoundError, PostgreSQLError
+from system.application.exceptions.repository_exceptions import InvalidInputError, NoObjectFoundError
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import PostgreSQLError
 from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.product_model import ProductModel
 
