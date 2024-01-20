@@ -5,6 +5,7 @@ from system.application.exceptions.client_exceptions import ClientAlreadyExistsE
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.usecase import client_usecase
 from system.application.dto.requests.client_request import CreateClientRequest
+from system.infrastructure.adapters.database.repositories.client_repository import ClientRepository
 
 @app.route("/create_client", methods=["POST"])
 def create_client():
@@ -13,7 +14,10 @@ def create_client():
     except ValidationError as ex:
         return ex.errors(), 400
     try:
-        client = client_usecase.CreateClientUseCase.execute(request=create_client_request)
+        client = client_usecase.CreateClientUseCase.execute(
+            request=create_client_request,
+            client_repository=ClientRepository
+        )
     except ClientAlreadyExistsError:
         return {"error": "This Client already exists"}, 409
     except InfrastructureError:
@@ -24,7 +28,10 @@ def create_client():
 @app.route("/get_client/<cpf>", methods=["GET"])
 def get_client_by_cpf(cpf):
     try:
-        client = client_usecase.GetClientByCPFUseCase.execute(cpf=cpf)
+        client = client_usecase.GetClientByCPFUseCase.execute(
+            cpf=cpf,
+            client_repository=ClientRepository
+        )
     except ClientDoesNotExistError:
         return {"error": "This Client does not exist"}, 404
     except InfrastructureError:
@@ -35,7 +42,9 @@ def get_client_by_cpf(cpf):
 @app.route("/get_clients/", methods=["GET"])
 def get_clients():
     try:
-        clients = client_usecase.GetAllClientsUseCase.execute()
+        clients = client_usecase.GetAllClientsUseCase.execute(
+            client_repository=ClientRepository
+        )
         clients_list = [vars(client) for client in clients.response]
     except InfrastructureError:
         return {"error": "Internal Error"}, 500

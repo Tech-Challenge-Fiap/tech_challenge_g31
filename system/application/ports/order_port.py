@@ -34,3 +34,8 @@ class OrderPort:
         """
         Update an order's status
         """
+
+    @classmethod
+    @abstractmethod
+    def get_all_active_orders(cls) -> List[OrderEntity]:
+        """Get all orders"""

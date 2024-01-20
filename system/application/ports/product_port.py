@@ -48,3 +48,10 @@ class ProductPort:
         """
         Method that remove product
         """
+
+    @classmethod
+    @abstractmethod
+    def get_products_by_ids(product_id: int) -> ProductEntity:
+        """
+        Get product by its id
+        """

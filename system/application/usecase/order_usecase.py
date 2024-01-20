@@ -15,36 +15,33 @@ from system.application.exceptions.order_exceptions import (
     OrderUpdateError,
 )
 from system.application.exceptions.product_exceptions import ProductDoesNotExistError
+from system.application.ports.order_port import OrderPort
+from system.application.ports.payment_port import PaymentPort
+from system.application.ports.payment_service_port import PaymentService
+from system.application.ports.product_port import ProductPort
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.order import OrderEntity
 from system.domain.enums.enums import OrderStatusEnum, PaymentStatusEnum
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import (
-    NoObjectFoundError,
-    PostgreSQLError,
-)
-from system.infrastructure.adapters.database.repositories.order_repository import (
-    OrderRepository,
-)
-from system.infrastructure.adapters.database.repositories.payment_repository import (
-    PaymentRepository,
-)
-from system.infrastructure.adapters.database.repositories.product_repository import (
-    ProductRepository,
-)
-from system.infrastructure.adapters.external_tools.mercado_pago import MercadoPago, MercadoPagoError
+from system.application.exceptions.repository_exceptions import NoObjectFoundError, DataRepositoryExeption
 
 
 class CreateOrderUseCase(UseCase, Resource):
-    def execute(request: CreateOrderRequest) -> CreateOrderResponse:
+    def execute(
+            request: CreateOrderRequest,
+            order_repository: OrderPort,
+            product_repository: ProductPort,
+            payment_repository: PaymentPort,
+            payment_service: PaymentService
+        ) -> CreateOrderResponse:
         """
         Create Order
         """
         try:
-            products = ProductRepository.get_products_by_ids(request.products)
-        except PostgreSQLError as err:
-            raise InfrastructureError(str(err))
+            products = product_repository.get_products_by_ids(request.products)
         except NoObjectFoundError:
             raise OrderDoesNotExistError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         # Verifique se todos os product_ids da requisição estão na lista de produtos disponíveis
         gotten_product_ids = [product.product_id for product in products]
         for product_id in request.products:
@@ -58,10 +55,10 @@ class CreateOrderUseCase(UseCase, Resource):
             order_price += product.price * product_count[product.product_id]
             order_waiting_time += product.prep_time * product_count[product.product_id]
         try:
-            payment = PaymentRepository.create_payment()
-            pix_payment = MercadoPago.create_qr_code_pix_payment(payment.id)
-            payment = PaymentRepository.update_payment_qrcode(payment.id, pix_payment["qr_data"])
-        except PostgreSQLError:
+            payment = payment_repository.create_payment()
+            pix_payment = payment_service.create_qr_code_pix_payment(payment.id)
+            payment = payment_repository.update_payment_qrcode(payment.id, pix_payment["qr_data"])
+        except DataRepositoryExeption:
             raise InfrastructureError(str(err))
         try:
             order = OrderEntity(
@@ -71,17 +68,22 @@ class CreateOrderUseCase(UseCase, Resource):
                 client_id=request.client_id,
                 payment=payment,
             )
-            response = OrderRepository.create_order(order)
-        except PostgreSQLError as err:
+            response = order_repository.create_order(order)
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         return CreateOrderResponse(response.model_dump())
 
 
 class CheckoutOrderUseCase(UseCase, Resource):
-    def execute(order_id: int, request: PaymentRequest) -> UpdateOrderResponse:
+    def execute(
+            order_id: int,
+            request: PaymentRequest,
+            order_repository: OrderPort,
+            payment_repository: PaymentPort
+        ) -> UpdateOrderResponse:
         try:
-            order = OrderRepository.get_order_by_id(order_id=order_id)
-            payment = PaymentRepository.update_payment_status(
+            order = order_repository.get_order_by_id(order_id=order_id)
+            payment = payment_repository.update_payment_status(
                 payment_id=order.payment.id, payment_status=request.status
             )
             order.payment = payment
@@ -91,7 +93,7 @@ class CheckoutOrderUseCase(UseCase, Resource):
             elif payment.status == PaymentStatusEnum.UNPAID:
                 updated_order_status = OrderStatusEnum.CANCELED
 
-            order = OrderRepository.update_order_status(
+            order = order_repository.update_order_status(
                 order_id=order_id, status=updated_order_status
             )
         except IntegrityError as err:
@@ -102,27 +104,27 @@ class CheckoutOrderUseCase(UseCase, Resource):
 
 
 class GetOrderByIDUseCase(UseCase, Resource):
-    def execute(order_id: int) -> GetOrderByIDResponse:
+    def execute(order_id: int, order_repository: OrderPort) -> GetOrderByIDResponse:
         """
         Get order by its id
         """
         try:
-            response = OrderRepository.get_order_by_id(order_id)
-        except PostgreSQLError as err:
-            raise InfrastructureError(str(err))
+            response = order_repository.get_order_by_id(order_id)
         except NoObjectFoundError:
             raise OrderDoesNotExistError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         return GetOrderByIDResponse(response.model_dump())
 
 
 class GetAllOrdersUseCase(UseCaseNoRequest, Resource):
-    def execute() -> GetAllOrdersResponse:
+    def execute(order_repository: OrderPort) -> GetAllOrdersResponse:
         """
         Get orders with filters
         """
         try:
-            response = OrderRepository.get_all_orders()
-        except PostgreSQLError as err:
+            response = order_repository.get_all_orders()
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
 
         orders = [r.model_dump() for r in response]
@@ -133,26 +135,28 @@ class UpdateOrderStatusUseCase(UseCase, Resource):
     def execute(
         status: OrderStatusEnum,
         order_id: int,
+        order_repository: OrderPort,
     ) -> UpdateOrderResponse:
         """
         Update order status
         """
         try:
-            response = OrderRepository.update_order_status(order_id, status)
+            response = order_repository.update_order_status(order_id, status)
         except IntegrityError as err:
             raise OrderUpdateError(str(err))
         except NoObjectFoundError:
             raise OrderDoesNotExistError
         return UpdateOrderResponse(response.model_dump())
     
+
 class GetOrdersUseCase(UseCaseNoRequest, Resource):
-    def execute() -> GetAllOrdersResponse:
+    def execute(order_repository: OrderPort) -> GetAllOrdersResponse:
         """
         Get orders with filters
         """
         try:
-            response = OrderRepository.get_all_active_orders()
-        except PostgreSQLError as err:
+            response = order_repository.get_all_active_orders()
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
 
         orders = [r.model_dump() for r in response]

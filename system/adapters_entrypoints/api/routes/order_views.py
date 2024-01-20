@@ -13,6 +13,10 @@ from system.application.dto.requests.order_request import (
     CreateOrderRequest,
     UpdateOrderStatusRequest,
 )
+from system.infrastructure.adapters.database.repositories.order_repository import OrderRepository
+from system.infrastructure.adapters.database.repositories.payment_repository import PaymentRepository
+from system.infrastructure.adapters.database.repositories.product_repository import ProductRepository
+from system.infrastructure.adapters.external_tools.mercado_pago import MercadoPago
 
 
 @app.route("/checkout/<order_id>", methods=["PATCH"])
@@ -23,7 +27,10 @@ def checkout_order(order_id):
         return ex.errors(), 400
     try:
         order = order_usecase.CheckoutOrderUseCase.execute(
-            order_id=order_id, request=mercado_pago_request
+            order_id=order_id,
+            request=mercado_pago_request,
+            order_repository=OrderRepository,
+            payment_repository=PaymentRepository
         )
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
@@ -39,7 +46,13 @@ def create_order():
     except ValidationError as ex:
         return ex.errors(), 400
     try:
-        order = order_usecase.CreateOrderUseCase.execute(request=create_order_request)
+        order = order_usecase.CreateOrderUseCase.execute(
+            request=create_order_request,
+            order_repository=OrderRepository,
+            product_repository=ProductRepository,
+            payment_repository=PaymentRepository,
+            payment_service=MercadoPago
+        )
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     except OrderDoesNotExistError:
@@ -52,7 +65,7 @@ def create_order():
 @app.route("/get_order/<order_id>", methods=["GET"])
 def get_order_by_id(order_id):
     try:
-        order = order_usecase.GetOrderByIDUseCase.execute(order_id=order_id)
+        order = order_usecase.GetOrderByIDUseCase.execute(order_id=order_id, order_repository=OrderRepository,)
     except OrderDoesNotExistError:
         return {"error": "This Order does not exist"}, 404
     except InfrastructureError:
@@ -63,7 +76,7 @@ def get_order_by_id(order_id):
 @app.route("/get_orders/", methods=["GET"])
 def get_orders():
     try:
-        orders = order_usecase.GetAllOrdersUseCase.execute()
+        orders = order_usecase.GetAllOrdersUseCase.execute(order_repository=OrderRepository,)
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return orders.response
@@ -77,7 +90,7 @@ def patch_order(order_id):
         return ex.errors(), 400
     try:
         order = order_usecase.UpdateOrderStatusUseCase.execute(
-            order_id=order_id, status=update_order_request.status
+            order_id=order_id, status=update_order_request.status, order_repository=OrderRepository,
         )
     except OrderDoesNotExistError:
         return "This Order does not exist", 400
@@ -91,7 +104,7 @@ def patch_order(order_id):
 @app.route("/update_order_payment/<order_id>", methods=["PATCH"])
 def check_order_payment(order_id):
     try:
-        order = payment_usecase.UpdateOrderPaymentUseCase.execute(order_id=order_id)
+        order = payment_usecase.UpdateOrderPaymentUseCase.execute(order_id=order_id, order_repository=OrderRepository)
     except OrderDoesNotExistError:
         return "This Order does not exist", 400
     except InfrastructureError:
@@ -101,7 +114,7 @@ def check_order_payment(order_id):
 @app.route("/get_active_orders/", methods=["GET"])
 def get_active_orders():
     try:
-        orders = order_usecase.GetOrdersUseCase.execute()
+        orders = order_usecase.GetOrdersUseCase.execute(order_repository=OrderRepository,)
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return orders.response

@@ -8,6 +8,7 @@ from system.application.dto.requests.product_request import (
     CreateProductRequest,
     UpdateProductRequest,
 )
+from system.infrastructure.adapters.database.repositories.product_repository import ProductRepository
 
 
 @app.route("/create_product", methods=["POST"])
@@ -17,7 +18,7 @@ def create_product():
     except ValidationError as ex:
         return ex.errors(), 400
     try:
-        product = products_usecase.CreateProductUseCase.execute(request=create_product_request)
+        product = products_usecase.CreateProductUseCase.execute(request=create_product_request, product_repository=ProductRepository)
     except ProductAlreadyExistsError:
         return {"error": "This product already exists"}, 409
     except InfrastructureError:
@@ -28,7 +29,7 @@ def create_product():
 @app.route("/get_product/<product_id>", methods=["GET"])
 def get_product_by_id(product_id):
     try:
-        product = products_usecase.GetProductByIDUseCase.execute(product_id=product_id)
+        product = products_usecase.GetProductByIDUseCase.execute(product_id=product_id, product_repository=ProductRepository)
     except ProductDoesNotExistError:
         return {"error": "This Product does not exist"}, 404
     except InfrastructureError:
@@ -39,7 +40,7 @@ def get_product_by_id(product_id):
 @app.route("/get_products/", methods=["GET"])
 def get_products():
     try:
-        products = products_usecase.GetAllProductsUseCase.execute()
+        products = products_usecase.GetAllProductsUseCase.execute(product_repository=ProductRepository)
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return products.response
@@ -48,7 +49,7 @@ def get_products():
 @app.route("/get_products/<product_type>", methods=["GET"])
 def get_products_by_type(product_type):
     try:
-        products = products_usecase.GetProductsByTypeUseCase.execute(product_type=product_type)
+        products = products_usecase.GetProductsByTypeUseCase.execute(product_type=product_type, product_repository=ProductRepository)
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     except ProductTypeError:
@@ -58,7 +59,7 @@ def get_products_by_type(product_type):
 @app.route("/delete_product/<product_id>", methods=["DELETE"])
 def delete_product(product_id):
     try:
-        products_usecase.DeleteProductUseCase.execute(product_id=product_id)
+        products_usecase.DeleteProductUseCase.execute(product_id=product_id, product_repository=ProductRepository)
     except ProductDoesNotExistError:
         return {"error": "This Product does not exist"}, 404
     except InfrastructureError:
@@ -74,7 +75,7 @@ def update_product(product_id: int):
         return ex.errors(), 400
     try:
         product = products_usecase.UpdateProductUseCase.execute(
-            product_id=product_id, request=update_product_request
+            product_id=product_id, request=update_product_request, product_repository=ProductRepository
         )
     except ProductDoesNotExistError:
         return {"error": "This Product does not exist"}, 404
@@ -87,7 +88,7 @@ def update_product(product_id: int):
 @app.route("/enable_product/<product_id>", methods=["PATCH"])
 def enable_product(product_id):
     try:
-        product =products_usecase.EnableProductUseCase.execute(product_id=product_id)
+        product =products_usecase.EnableProductUseCase.execute(product_id=product_id, product_repository=ProductRepository)
     except ProductDoesNotExistError:
         return {"error": "This Product does not exist"}, 404
     except InfrastructureError:
@@ -97,7 +98,7 @@ def enable_product(product_id):
 @app.route("/get_deleted_products/", methods=["GET"])
 def get_deleted_products():
     try:
-        products = products_usecase.GetDeletedProductsUseCase.execute()
+        products = products_usecase.GetDeletedProductsUseCase.execute(product_repository=ProductRepository)
     except InfrastructureError:
         return {"error": "Internal Error"}, 500
     return products.response

@@ -12,61 +12,62 @@ from system.application.dto.responses.product_response import (
 )
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.exceptions.product_exceptions import ProductDoesNotExistError, ProductTypeError
+from system.application.exceptions.repository_exceptions import RepositoryExeption
+from system.application.ports.product_port import ProductPort
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.product import ProductEntity
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import InvalidInputError, NoObjectFoundError, PostgreSQLError
-from system.infrastructure.adapters.database.repositories.product_repository import ProductRepository
+from system.infrastructure.adapters.database.exceptions.postgres_exceptions import InvalidInputError, NoObjectFoundError
 
 
 class CreateProductUseCase(UseCase, Resource):
-    def execute(request: CreateProductRequest) -> CreateProductResponse:
+    def execute(request: CreateProductRequest, product_repository: ProductPort) -> CreateProductResponse:
         """
         Create product
         """
         product = ProductEntity(**request.model_dump())
         try:
-            response = ProductRepository.create_product(product)
-        except PostgreSQLError as err:
+            response = product_repository.create_product(product)
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
 
         return CreateProductResponse(response.model_dump())
 
 
 class GetProductByIDUseCase(UseCase, Resource):
-    def execute(product_id: int) -> GetProductByIDResponse:
+    def execute(product_id: int, product_repository: ProductPort) -> GetProductByIDResponse:
         """
         Get product by its id
         """
         try:
-            response = ProductRepository.get_product_by_id(product_id)
+            response = product_repository.get_product_by_id(product_id)
         except NoObjectFoundError:
             raise ProductDoesNotExistError
-        except PostgreSQLError as err:
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
         return GetProductByIDResponse(response.model_dump())
 
 
 class GetAllProductsUseCase(UseCaseNoRequest, Resource):
-    def execute() -> GetAllProductsResponse:
+    def execute(product_repository: ProductPort) -> GetAllProductsResponse:
         """
         Get products with filters
         """
         try:
-            response = ProductRepository.get_all_products()
-        except PostgreSQLError as err:
+            response = product_repository.get_all_products()
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
         response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)
 
 
 class GetProductsByTypeUseCase(UseCase, Resource):
-    def execute(product_type: int) -> GetProductsByTypeResponse:
+    def execute(product_type: int, product_repository: ProductPort) -> GetProductsByTypeResponse:
         """
         Get product by its id
         """
         try:
-            response = ProductRepository.get_products_by_type(product_type)
-        except PostgreSQLError as err:
+            response = product_repository.get_products_by_type(product_type)
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
         except InvalidInputError:
             raise ProductTypeError
@@ -75,11 +76,11 @@ class GetProductsByTypeUseCase(UseCase, Resource):
 
 
 class DeleteProductUseCase(UseCase, Resource):
-    def execute(product_id: int) -> None:
+    def execute(product_id: int, product_repository: ProductPort) -> None:
         """Delete a product by its id"""
         try:
-            ProductRepository.delete_product_by_id(product_id)
-        except PostgreSQLError as err:
+            product_repository.delete_product_by_id(product_id)
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
@@ -88,35 +89,36 @@ class UpdateProductUseCase(UseCase, Resource):
     def execute(
         product_id: int,
         request: UpdateProductRequest,
+        product_repository: ProductPort
     ) -> UpdateProductResponse:
         """Update product"""
         try:
-            product = ProductRepository.update_product(product_id, request)
-        except PostgreSQLError as err:
+            product = product_repository.update_product(product_id, request)
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
         return UpdateProductResponse(product.model_dump())
 
 class EnableProductUseCase(UseCase, Resource):
-    def execute(product_id: int) -> None:
+    def execute(product_id: int, product_repository: ProductPort) -> None:
         """Enable a product by its id"""
         try:
-            product = ProductRepository.enable_product_by_id(product_id)
-        except PostgreSQLError as err:
+            product = product_repository.enable_product_by_id(product_id)
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
         return UpdateProductResponse(product.model_dump())
 
 class GetDeletedProductsUseCase(UseCaseNoRequest, Resource):
-    def execute() -> GetAllProductsResponse:
+    def execute(product_repository: ProductPort) -> GetAllProductsResponse:
         """
         Get products with filters
         """
         try:
-            response = ProductRepository.get_deleted_products()
-        except PostgreSQLError as err:
+            response = product_repository.get_deleted_products()
+        except RepositoryExeption as err:
             raise InfrastructureError(str(err))
         response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)

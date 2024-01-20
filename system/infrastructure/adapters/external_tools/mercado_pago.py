@@ -1,5 +1,6 @@
 import math
 import basehash
+from system.application.ports.payment_service_port import PaymentService
 from system.infrastructure.adapters.external_tools.exceptions.mercado_pago_exceptions import (
     MercadoPagoError,
 )
@@ -8,7 +9,7 @@ from system.infrastructure.adapters.external_tools.exceptions.mercado_pago_excep
 b62 = basehash.base62(generator=1.7190192019129120 + math.pi)
 
 
-class MercadoPago:
+class MercadoPago(PaymentService):
     @classmethod
     def create_qr_code_pix_payment(cls, payment_id) -> str:
         # aqui usar um md5 em cima do id do pagamento para gerar o external_reference passado de parâmetro ao mercado pago
