@@ -83,11 +83,16 @@ class OrderRepository(OrderPort):
         except IntegrityError:
             raise PostgreSQLError("PostgreSQL Error")
         product_list = []
+        products_ids = []
         for product in order_products:
             product_list.append(BasicProductEntity.from_orm(product))
+            for _ in range(product.quantity):
+                products_ids.append(product.product_id)
+
         order_dict = order.__dict__
         order_dict["payment"] = order.payment
         order_dict["products"] = product_list
+        order_dict["products_ids"] = products_ids
         return OrderEntity.from_orm(order_dict)
 
     @classmethod
@@ -104,11 +109,15 @@ class OrderRepository(OrderPort):
             except IntegrityError:
                 raise PostgreSQLError("PostgreSQL Error")
             product_list = []
+            products_ids = []
             for product in order_products:
                 product_list.append(BasicProductEntity.from_orm(product))
+                for _ in range(product.quantity):
+                    products_ids.append(product.product_id)
             order_dict = order.__dict__
             order_dict["payment"] = order.payment
             order_dict["products"] = product_list
+            order_dict["products_ids"] = products_ids
             orders_dict.append(order_dict)
         orders_list = [OrderEntity.from_orm(order) for order in orders_dict]
         return orders_list
@@ -161,11 +170,15 @@ class OrderRepository(OrderPort):
             except IntegrityError:
                 raise PostgreSQLError("PostgreSQL Error")
             product_list = []
+            products_ids = []
             for product in order_products:
                 product_list.append(BasicProductEntity.from_orm(product))
+                for _ in range(product.quantity):
+                    products_ids.append(product.product_id)
             order_dict = order.__dict__
             order_dict["payment"] = order.payment
             order_dict["products"] = product_list
+            order_dict["products_ids"] = products_ids
             orders_dict.append(order_dict)
         orders_list = [OrderEntity.from_orm(order) for order in orders_dict]
         return orders_list
