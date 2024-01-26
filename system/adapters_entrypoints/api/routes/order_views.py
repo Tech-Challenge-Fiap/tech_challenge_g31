@@ -88,7 +88,7 @@ def patch_order(order_id):
     return order.response
 
 
-@app.route("/update_order_payment/<order_id>", methods=["PATCH"])
+@app.route("/get_order/payment/<order_id>", methods=["GET"])
 def check_order_payment(order_id):
     try:
         order = payment_usecase.UpdateOrderPaymentUseCase.execute(order_id=order_id)
