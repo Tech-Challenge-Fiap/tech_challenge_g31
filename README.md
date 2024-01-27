@@ -16,7 +16,7 @@ Acesse o serviço pela url [http://localhost:5000](http://localhost:5000)
 ## Opção 2: Inicie o Ambiente com Helm
 Primeiramente instale o `kubectl` para manipular o cluster kubernetes, de acordo com a [documentação oficial](https://kubernetes.io/docs/tasks/tools/#kubectl).
 
-Em seguida, instale o Gerenciador de Pacote Helm da forma que desejar para o seu sistema operacional, conforme a [documentação](https://helm.sh/docs/intro/install/]) 
+Em seguida, instale o Gerenciador de Pacote Helm da forma que desejar para o seu sistema operacional, conforme a [documentação](https://helm.sh/docs/intro/install/) 
 
 Agora é necessário utilizar um cluster local para executar o ambiente. Existem diversos clusters que podem ser utilizados, porém recomendamos a utilização do minikube. Instale-o conforme a [documentação](https://minikube.sigs.k8s.io/docs/start/). Para a instalação do minikube é importante ter o [Docker](https://docs.docker.com/) instalado em sua máquina.
 
