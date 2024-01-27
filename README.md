@@ -7,11 +7,11 @@ Postman: https://documenter.getpostman.com/view/28694171/2s9YRCXrYf
 
 ## Arquitetura Kubernetes
 
-![arquitetura-kubernetes](docs/arq-kubernetes.png)
+![arquitetura-kubernetes](docs/arq-kubernetes-2.png)
 
 ## Arquitetura Código
 
-![arquitetura-codigo](docs/arq-codigo.png)
+![arquitetura-codigo](docs/arq-codigo-2.png)
 
 1 - Usuário faz uma requisição: Um usuário interage com a aplicação fazendo uma requisição através da UI ou de um client API.
 
