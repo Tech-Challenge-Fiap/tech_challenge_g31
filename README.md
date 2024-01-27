@@ -1,6 +1,6 @@
 ## Sistema de criação e gerenciamento de pedidos realizado para o Tech Challenge FIAP - SOAT - Grupo 31
 
-Miro: https://miro.com/app/board/uXjVNe56-bI=/?share_link_id=839163216515
+Miro: https://miro.com/app/board/uXjVNe56-bI=/?share_link_id=839163216515<br>
 Postman: https://documenter.getpostman.com/view/28694171/2s9YRCXrYf
 
 # Arquitetura da Aplicação
