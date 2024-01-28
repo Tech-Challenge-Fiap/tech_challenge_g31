@@ -2,11 +2,15 @@
 
 
 helm package fiaptechchallenge
+sleep 1
 helm install fiaptechchallenge-0.1.0.tgz --generate-name
+sleep 2
 rm fiaptechchallenge-0.1.0.tgz
 
 trap "helm uninstall $(helm list --filter 'fiaptechchallenge' --no-headers --short)" INT
 
+echo "waiting pod to be ready..."
+sleep 50
 running=false
 while [ "$running" = false ]; do
     echo "waiting pod to be ready..."

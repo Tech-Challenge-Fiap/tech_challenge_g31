@@ -40,7 +40,7 @@ Este guia rápido descreve como configurar e executar a aplicação Flask usando
 Certifique-se de ter o Docker Compose instalado em sua máquina. Se não o tiver, instale-o.
 No diretório raiz do projeto, execute o seguinte comando para iniciar o ambiente:
 ```
-docker-compose up --build -V
+docker compose up --build -V
 ```
 Isso criará e iniciará os contêineres necessários para a aplicação.
 Acesse o serviço pela url [http://localhost:5000](http://localhost:5000)
@@ -58,7 +58,7 @@ minikube start
 
 No diretório raiz do projeto, execute o comando:
 ```
-kubectl appy -f kubernetes
+kubectl apply -f kubernetes
 ```
 
 Esse comando criárá todos os recursos necessários para que a aplicação rode corretamente no clustes.
@@ -100,7 +100,7 @@ helm install fiaptechchallenge-0.1.0.tgz --generate-name
 ```
 Com isso o servidor iniciará em seu cluster configurado.
 
-Se o cluster não tiver configurado para exportar as portas para o host local, utilize o comando
+Para conectar a porta do host com a sua porta local, utilize o comando:
 ```
 kubectl port-forward service/svcfiaptechchallenge 5000:80
 ```
