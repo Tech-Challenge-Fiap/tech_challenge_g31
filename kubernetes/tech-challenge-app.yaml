@@ -12,6 +12,12 @@ spec:
       labels:
         app: fiaptechchallenge
     spec:
+      initContainers:
+      - name: check-db-ready
+        image: postgres:13-alpine
+        command: ['sh', '-c', 
+          'until pg_isready -h postgres -p 5432; 
+          do echo waiting for database; sleep 2; done;']
       containers:
       - name: fiaptechchallenge
         image: barbosaleandro/tech-challenge:1.2.2

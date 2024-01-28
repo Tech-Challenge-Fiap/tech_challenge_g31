@@ -8,8 +8,8 @@ from system.application.dto.responses.client_response import (
 from system.application.exceptions.client_exceptions import ClientDoesNotExistError
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
+from system.application.exceptions.repository_exception import NoObjectFoundError, DataRepositoryExeption
 from system.domain.entities.client import ClientEntity
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import NoObjectFoundError, PostgreSQLError
 from system.infrastructure.adapters.database.repositories.client_repository import (
     ClientRepository,
 )
@@ -23,7 +23,7 @@ class CreateClientUseCase(UseCase, Resource):
         client = ClientEntity(**request.model_dump())
         try:
             response = ClientRepository.create_client(client)
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         return CreateClientResponse(response.model_dump())
 
@@ -37,7 +37,7 @@ class GetClientByCPFUseCase(UseCase, Resource):
             client = ClientRepository.get_client_by_cpf(cpf)
         except NoObjectFoundError:
             raise ClientDoesNotExistError
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         return GetClientByCPFResponse(client.model_dump())
 
@@ -49,6 +49,6 @@ class GetAllClientsUseCase(UseCaseNoRequest, Resource):
         """
         try:
             response = ClientRepository.get_all_clients()
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         return GetAllClientsResponse(response)

@@ -1,6 +1,7 @@
 from datetime import datetime
 import random
 from psycopg2 import IntegrityError
+from system.application.ports.payment_port import PaymentPort
 from system.domain.entities.payment import PaymentEntity
 from system.domain.enums.enums import PaymentStatusEnum
 from system.infrastructure.adapters.database.exceptions.postgres_exceptions import (
@@ -9,15 +10,9 @@ from system.infrastructure.adapters.database.exceptions.postgres_exceptions impo
 )
 from system.infrastructure.adapters.database.models import db
 from system.infrastructure.adapters.database.models.payment_model import PaymentModel
-from system.infrastructure.adapters.external_tools.mercado_pago import (
-    MercadoPago,
-)
-from system.infrastructure.adapters.external_tools.exceptions.mercado_pago_exceptions import (
-    MercadoPagoError,
-)
 
 
-class PaymentRepository:
+class PaymentRepository(PaymentPort):
     @classmethod
     def create_payment(cls) -> PaymentEntity:
         """Create payment"""

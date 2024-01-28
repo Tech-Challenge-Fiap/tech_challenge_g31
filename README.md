@@ -1,13 +1,14 @@
 ## Sistema de criação e gerenciamento de pedidos realizado para o Tech Challenge FIAP - SOAT - Grupo 31
 
 Miro: https://miro.com/app/board/uXjVNe56-bI=/?share_link_id=839163216515<br>
-Postman: https://documenter.getpostman.com/view/28694171/2s9YRCXrYf
+Postman: https://documenter.getpostman.com/view/28694171/2s9YRCXrYf<br>
+Video: https://youtu.be/Crrirpc4kcY
 
 # Arquitetura da Aplicação
 
 ## Arquitetura Kubernetes
 
-![arquitetura-kubernetes](docs/arq-kubernetes-2.png)
+![arquitetura-kubernetes](docs/arq-kubernetes-3.png)
 
 ## Arquitetura Código
 
@@ -44,7 +45,42 @@ Isso criará e iniciará os contêineres necessários para a aplicação.
 Acesse o serviço pela url [http://localhost:5000](http://localhost:5000)
 
 
-## Opção 2: Inicie o Ambiente com Helm
+## Opção 2: Inicie o Ambiente com kubernetes
+Primeiramente instale o `kubectl` para manipular o cluster kubernetes, de acordo com a [documentação oficial](https://kubernetes.io/docs/tasks/tools/#kubectl).
+
+Agora é necessário utilizar um cluster local para executar o ambiente. Existem diversos clusters que podem ser utilizados, porém recomendamos a utilização do minikube. Instale-o conforme a [documentação](https://minikube.sigs.k8s.io/docs/start/). Para a instalação do minikube é importante ter o [Docker](https://docs.docker.com/) instalado em sua máquina.
+Após a instalação do minikube, inicie o cluster com:
+
+```
+minikube start
+```
+
+No diretório raiz do projeto, execute o comando:
+```
+kubectl appy -f kubernetes
+```
+
+Esse comando criárá todos os recursos necessários para que a aplicação rode corretamente no clustes.
+
+Espere até que todos os pods da aplicação estejam prontos (para acompanhar os pods subindo, execute `kubectl get pods --watch`)
+
+Após os pods estarem prontos, para acessar a aplicação execute:
+
+```
+minikube service svcfiaptechchallenge 
+```
+
+ou direcione a porta da aplicação no cluster para o seu host local, com:
+
+```
+kubectl port-forward service/svcfiaptechchallenge 5000:80
+```
+
+e acesse o serviço pela url [http://localhost:5000](http://localhost:5000)
+
+
+
+## Opção 3: Inicie o Ambiente com Helm e Kubernetes
 Primeiramente instale o `kubectl` para manipular o cluster kubernetes, de acordo com a [documentação oficial](https://kubernetes.io/docs/tasks/tools/#kubectl).
 
 Em seguida, instale o Gerenciador de Pacote Helm da forma que desejar para o seu sistema operacional, conforme a [documentação](https://helm.sh/docs/intro/install/) 
@@ -71,7 +107,7 @@ e acesse o serviço pela url [http://localhost:5000](http://localhost:5000)
 
 
 ## Opção Bonus: Inicie o ambiente com script run-kube
-Certifique-se de ter instalado em sua máquina as mesmas dependências da Opção 2 (docker, kubectl, helm e minikube) e ter iniciado o cluster minikube.
+Certifique-se de ter instalado em sua máquina as mesmas dependências da Opção 3 (docker, kubectl, helm e minikube) e ter iniciado o cluster minikube.
 
 No diretório raiz do projeto, execute:
 ```
@@ -79,4 +115,31 @@ bash run-kube.sh
 ```
 Esse comando usará o helm para iniciar o ambiente e após os pods da aplicação estarem prontos, realizara a conexão entre o serviço e a porta 5000 do seu localhost.
 
-Acesso o serviço pela url [http://localhost:5000](http://localhost:5000)
+Acesse o serviço pela url [http://localhost:5000](http://localhost:5000)
+
+
+## Fluxo de teste da aplicação via Postman
+
+Para testar a aplicação, uma vez que ela está rodando na porta 5000 do seu host local, considere esse fluxo de teste.
+
+1. **Client/Get Clients/Get Clients**: verifique que não há nenhum cliente cadastrado
+2. **Client/Create Client/Create Client**: cadastre um cliente
+3. **Client/Get Client by CPF/Get Client by CPF**: verifique que foi cadastrado o cliente
+
+4. **Product/Get all products/Get all Products**: verifique que não há produtos cadastrados
+5. **Product/Create Product/Create Product Frango**: cadastre um "frangão daora"
+6. **Product/Create Product/Create Product Frango**: cadastre uma "batata frita"
+7. **Product/Create Product/Create Product Frango**: cadastre um "cheeseburguer"
+8. **Product/Get all products/Get all Products**: verifique os produtos cadastrados
+8. **Product/Update Product/Update Product**: altere o preço da "batata frita"
+9. **Product/Get Product by ID/Get Product by ID**: verifique a alteração do preço da "batata frita"
+10. **Product/Delete Product/Delete Product**: delete o "cheeseburguer"
+
+11. **Order/Get Orders/Get Orders**: verifique que não há nenhum pedido cadastrado
+12. **Order/Create Order/Create Order**: cadastre um pedido com 1 "frangão daora" e 2 batatas fritas
+13. **Order/Check Order's Payment/Check Order's Payment**: verifique o status do pagamento do pedido como "UNPAID"
+14. **Order/[Webhook] Mercado Pago/[Webhook] Mercado Pago**: simule o webhook do MercadoPago atualizando o pagamento
+15. **Order/Check Order's Payment/Check Order's Payment**: verifique o status do pagamento do pedido como "PAID"
+16. **Order/Get Orders/Get Orders**: verifique o pedido com status "RECEIVED"
+17. **Order/Update Order Status/Update Order Status**: Atualize o status do pedido para "COMPLETED"
+18. **Order/Get Orders/Get Orders**: verifique que o pedido não é mais listado
