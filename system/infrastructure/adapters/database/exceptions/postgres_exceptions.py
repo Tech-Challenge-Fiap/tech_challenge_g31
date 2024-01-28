@@ -1,9 +1,5 @@
-class PostgreSQLError(Exception):
-    pass
+from system.application.exceptions.repository_exception import DataRepositoryExeption, NoObjectFoundError, InvalidInputError
 
 
-class NoObjectFoundError(Exception):
-    pass
-
-class InvalidInputError(Exception):
+class PostgreSQLError(DataRepositoryExeption):
     pass

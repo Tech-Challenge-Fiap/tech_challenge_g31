@@ -18,9 +18,9 @@ from system.application.exceptions.product_exceptions import ProductDoesNotExist
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.order import OrderEntity
 from system.domain.enums.enums import OrderStatusEnum, PaymentStatusEnum
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import (
+from system.application.exceptions.repository_exception import (
     NoObjectFoundError,
-    PostgreSQLError,
+    DataRepositoryExeption,
 )
 from system.infrastructure.adapters.database.repositories.order_repository import (
     OrderRepository,
@@ -41,10 +41,10 @@ class CreateOrderUseCase(UseCase, Resource):
         """
         try:
             products = ProductRepository.get_products_by_ids(request.products)
-        except PostgreSQLError as err:
-            raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise OrderDoesNotExistError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         # Verifique se todos os product_ids da requisição estão na lista de produtos disponíveis
         gotten_product_ids = [product.product_id for product in products]
         for product_id in request.products:
@@ -61,7 +61,7 @@ class CreateOrderUseCase(UseCase, Resource):
             payment = PaymentRepository.create_payment()
             pix_payment = MercadoPago.create_qr_code_pix_payment(payment.id)
             payment = PaymentRepository.update_payment_qrcode(payment.id, pix_payment["qr_data"])
-        except PostgreSQLError:
+        except DataRepositoryExeption:
             raise InfrastructureError(str(err))
         try:
             order = OrderEntity(
@@ -72,7 +72,7 @@ class CreateOrderUseCase(UseCase, Resource):
                 payment=payment,
             )
             response = OrderRepository.create_order(order)
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         return CreateOrderResponse(response.model_dump())
 
@@ -108,10 +108,10 @@ class GetOrderByIDUseCase(UseCase, Resource):
         """
         try:
             response = OrderRepository.get_order_by_id(order_id)
-        except PostgreSQLError as err:
-            raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise OrderDoesNotExistError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         return GetOrderByIDResponse(response.model_dump())
 
 
@@ -122,7 +122,7 @@ class GetAllOrdersUseCase(UseCaseNoRequest, Resource):
         """
         try:
             response = OrderRepository.get_all_orders()
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
 
         orders = [r.model_dump() for r in response]
@@ -152,7 +152,7 @@ class GetOrdersUseCase(UseCaseNoRequest, Resource):
         """
         try:
             response = OrderRepository.get_all_active_orders()
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
 
         orders = [r.model_dump() for r in response]

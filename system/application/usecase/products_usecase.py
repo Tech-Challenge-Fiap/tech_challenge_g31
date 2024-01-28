@@ -14,7 +14,7 @@ from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.exceptions.product_exceptions import ProductDoesNotExistError, ProductTypeError
 from system.application.usecase.usecases import UseCase, UseCaseNoRequest
 from system.domain.entities.product import ProductEntity
-from system.infrastructure.adapters.database.exceptions.postgres_exceptions import InvalidInputError, NoObjectFoundError, PostgreSQLError
+from system.application.exceptions.repository_exception import InvalidInputError, NoObjectFoundError, DataRepositoryExeption
 from system.infrastructure.adapters.database.repositories.product_repository import ProductRepository
 
 
@@ -26,7 +26,7 @@ class CreateProductUseCase(UseCase, Resource):
         product = ProductEntity(**request.model_dump())
         try:
             response = ProductRepository.create_product(product)
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
 
         return CreateProductResponse(response.model_dump())
@@ -41,7 +41,7 @@ class GetProductByIDUseCase(UseCase, Resource):
             response = ProductRepository.get_product_by_id(product_id)
         except NoObjectFoundError:
             raise ProductDoesNotExistError
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         return GetProductByIDResponse(response.model_dump())
 
@@ -53,7 +53,7 @@ class GetAllProductsUseCase(UseCaseNoRequest, Resource):
         """
         try:
             response = ProductRepository.get_all_products()
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)
@@ -66,10 +66,10 @@ class GetProductsByTypeUseCase(UseCase, Resource):
         """
         try:
             response = ProductRepository.get_products_by_type(product_type)
-        except PostgreSQLError as err:
-            raise InfrastructureError(str(err))
         except InvalidInputError:
             raise ProductTypeError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         response = [r.model_dump() for r in response]
         return GetProductsByTypeResponse(response)
 
@@ -79,7 +79,7 @@ class DeleteProductUseCase(UseCase, Resource):
         """Delete a product by its id"""
         try:
             ProductRepository.delete_product_by_id(product_id)
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
@@ -92,10 +92,10 @@ class UpdateProductUseCase(UseCase, Resource):
         """Update product"""
         try:
             product = ProductRepository.update_product(product_id, request)
-        except PostgreSQLError as err:
-            raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         return UpdateProductResponse(product.model_dump())
 
 class EnableProductUseCase(UseCase, Resource):
@@ -103,10 +103,10 @@ class EnableProductUseCase(UseCase, Resource):
         """Enable a product by its id"""
         try:
             product = ProductRepository.enable_product_by_id(product_id)
-        except PostgreSQLError as err:
-            raise InfrastructureError(str(err))
         except NoObjectFoundError:
             raise ProductDoesNotExistError
+        except DataRepositoryExeption as err:
+            raise InfrastructureError(str(err))
         return UpdateProductResponse(product.model_dump())
 
 class GetDeletedProductsUseCase(UseCaseNoRequest, Resource):
@@ -116,7 +116,7 @@ class GetDeletedProductsUseCase(UseCaseNoRequest, Resource):
         """
         try:
             response = ProductRepository.get_deleted_products()
-        except PostgreSQLError as err:
+        except DataRepositoryExeption as err:
             raise InfrastructureError(str(err))
         response = [r.model_dump() for r in response]
         return GetAllProductsResponse(response)
