@@ -8,7 +8,7 @@ Video:
 
 ## Arquitetura Kubernetes
 
-![arquitetura-kubernetes](docs/arq-kubernetes-3.png)
+![arquitetura-kubernetes](docs/arq-kubernetes-4.png)
 
 ## Arquitetura Código
 
