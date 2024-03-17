@@ -1,7 +1,10 @@
-name: Deploy to ECR
+name: Pipeline
 
 on:
-    workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 env:
   ECR_REPOSITORY: fiaptech_challenge_g31
@@ -9,10 +12,27 @@ env:
   AWS_REGION: us-east-2
 
 jobs:
-  
   build:
-    
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint
+    - name: Analysing the code with pylint
+      run: |
+        pylint $(git ls-files '*.py')
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+  
+  deploy:
     name: Deployment
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
