@@ -71,11 +71,11 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}        
         IMAGE_TAG: ${{ steps.commit.outputs.short }}
       run: |
-        sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" manifests/tech-challenge-app.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_NAME,$secrets.DB_NAME," job.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_USER,$secrets.DB_USER," job.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_PASSWORD,$secrets.DB_PASSWORD," job.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_HOST,$secrets.DB_HOST," job.yaml && \
+        sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" kubernetes/tech-challenge-app.yaml && \
+        sed -i "s,VAL_POSTGRES_DB_NAME,$secrets.DB_NAME," kubernetes/tech-challenge-app.yaml && \
+        sed -i "s,VAL_POSTGRES_DB_USER,$secrets.DB_USER," kubernetes/tech-challenge-app.yaml && \
+        sed -i "s,VAL_POSTGRES_DB_PASSWORD,$secrets.DB_PASSWORD," kubernetes/tech-challenge-app.yaml && \
+        sed -i "s,VAL_POSTGRES_DB_HOST,$secrets.DB_HOST," kubernetes/tech-challenge-app.yaml && \
         kubectl apply -f kubernetes/tech-challenge-app.yaml
         kubectl apply -f kubernetes/tech-challenge-svc.yaml
         kubectl apply -f kubernetes/metrics.yaml
