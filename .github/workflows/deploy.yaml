@@ -75,10 +75,10 @@ jobs:
         kubectl version && \
         kubectl config current-context && \
         sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" kubernetes/tech-challenge-app.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_NAME,${{ secrets.DB_NAME }}," kubernetes/tech-challenge-app.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_USER,${{ secrets.DB_USER }}," kubernetes/tech-challenge-app.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_PASSWORD,${{ secrets.DB_PASSWORD }}," kubernetes/tech-challenge-app.yaml && \
-        sed -i "s,VAL_POSTGRES_DB_HOST,${{ secrets.DB_HOST }}," kubernetes/tech-challenge-app.yaml && \
+        sed -i.bak "s,VAL_POSTGRES_DB_NAME,${{secrets.DB_NAME}}," kubernetes/tech-challenge-app.yaml && \
+        sed -i.bak "s,VAL_POSTGRES_DB_USER,${{secrets.DB_USER}} }}," kubernetes/tech-challenge-app.yaml && \
+        sed -i.bak "s,VAL_POSTGRES_DB_PASSWORD,${{secrets.DB_PASSWORD}}," kubernetes/tech-challenge-app.yaml && \
+        sed -i.bak "s,VAL_POSTGRES_DB_HOST,${{secrets.DB_HOST}}," kubernetes/tech-challenge-app.yaml && \
         kubectl apply -f kubernetes/tech-challenge-app.yaml
         kubectl apply -f kubernetes/tech-challenge-svc.yaml
         kubectl apply -f kubernetes/metrics.yaml
