@@ -4,9 +4,11 @@ from pydantic import ValidationError
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.exceptions.payment_exceptions import PaymentDoesNotExistsError
 from system.application.usecase import payment_usecase
+from system.infrastructure.adapters.decorators.jwt_decorator import require_auth
 
 
 @app.route("/webhook/update_payment", methods=["POST"])
+@require_auth
 def update_payment():
     try:
         request_json = request.get_json()

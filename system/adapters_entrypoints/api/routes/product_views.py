@@ -8,9 +8,11 @@ from system.application.dto.requests.product_request import (
     CreateProductRequest,
     UpdateProductRequest,
 )
+from system.infrastructure.adapters.decorators.jwt_decorator import require_auth
 
 
 @app.route("/create_product", methods=["POST"])
+@require_auth
 def create_product():
     try:
         create_product_request = CreateProductRequest(**request.get_json())
@@ -26,6 +28,7 @@ def create_product():
 
 
 @app.route("/get_product/<product_id>", methods=["GET"])
+@require_auth
 def get_product_by_id(product_id):
     try:
         product = products_usecase.GetProductByIDUseCase.execute(product_id=product_id)
@@ -37,6 +40,7 @@ def get_product_by_id(product_id):
 
 
 @app.route("/get_products/", methods=["GET"])
+@require_auth
 def get_products():
     try:
         products = products_usecase.GetAllProductsUseCase.execute()
@@ -46,6 +50,7 @@ def get_products():
 
 
 @app.route("/get_products/<product_type>", methods=["GET"])
+@require_auth
 def get_products_by_type(product_type):
     try:
         products = products_usecase.GetProductsByTypeUseCase.execute(product_type=product_type)
@@ -56,6 +61,7 @@ def get_products_by_type(product_type):
     return products.response
 
 @app.route("/delete_product/<product_id>", methods=["DELETE"])
+@require_auth
 def delete_product(product_id):
     try:
         products_usecase.DeleteProductUseCase.execute(product_id=product_id)
@@ -67,6 +73,7 @@ def delete_product(product_id):
 
 
 @app.route("/update_product/<product_id>", methods=["PATCH"])
+@require_auth
 def update_product(product_id: int):
     try:
         update_product_request = UpdateProductRequest(**request.get_json())
@@ -85,6 +92,7 @@ def update_product(product_id: int):
     return product.response
 
 @app.route("/enable_product/<product_id>", methods=["PATCH"])
+@require_auth
 def enable_product(product_id):
     try:
         product =products_usecase.EnableProductUseCase.execute(product_id=product_id)
@@ -95,6 +103,7 @@ def enable_product(product_id):
     return product.response
 
 @app.route("/get_deleted_products/", methods=["GET"])
+@require_auth
 def get_deleted_products():
     try:
         products = products_usecase.GetDeletedProductsUseCase.execute()

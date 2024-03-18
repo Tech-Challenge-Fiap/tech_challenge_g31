@@ -13,9 +13,11 @@ from system.application.dto.requests.order_request import (
     CreateOrderRequest,
     UpdateOrderStatusRequest,
 )
+from system.infrastructure.adapters.decorators.jwt_decorator import require_auth
 
 
 @app.route("/checkout/<order_id>", methods=["PATCH"])
+@require_auth
 def checkout_order(order_id):
     try:
         mercado_pago_request = PaymentRequest(**request.get_json())
@@ -33,6 +35,7 @@ def checkout_order(order_id):
 
 
 @app.route("/create_order", methods=["POST"])
+@require_auth
 def create_order():
     try:
         create_order_request = CreateOrderRequest(**request.get_json())
@@ -50,6 +53,7 @@ def create_order():
 
 
 @app.route("/get_order/<order_id>", methods=["GET"])
+@require_auth
 def get_order_by_id(order_id):
     try:
         order = order_usecase.GetOrderByIDUseCase.execute(order_id=order_id)
@@ -61,6 +65,7 @@ def get_order_by_id(order_id):
 
 
 @app.route("/get_orders/", methods=["GET"])
+@require_auth
 def get_orders():
     try:
         orders = order_usecase.GetAllOrdersUseCase.execute()
@@ -70,6 +75,7 @@ def get_orders():
 
 
 @app.route("/patch_order/<order_id>", methods=["PATCH"])
+@require_auth
 def patch_order(order_id):
     try:
         update_order_request = UpdateOrderStatusRequest(**request.get_json())
@@ -89,6 +95,7 @@ def patch_order(order_id):
 
 
 @app.route("/get_order/payment/<order_id>", methods=["GET"])
+@require_auth
 def check_order_payment(order_id):
     try:
         order = payment_usecase.UpdateOrderPaymentUseCase.execute(order_id=order_id)
@@ -99,6 +106,7 @@ def check_order_payment(order_id):
     return order.response
 
 @app.route("/get_active_orders/", methods=["GET"])
+@require_auth
 def get_active_orders():
     try:
         orders = order_usecase.GetOrdersUseCase.execute()

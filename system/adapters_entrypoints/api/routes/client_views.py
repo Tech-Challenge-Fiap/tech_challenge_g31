@@ -5,8 +5,10 @@ from system.application.exceptions.client_exceptions import ClientAlreadyExistsE
 from system.application.exceptions.default_exceptions import InfrastructureError
 from system.application.usecase import client_usecase
 from system.application.dto.requests.client_request import CreateClientRequest
+from system.infrastructure.adapters.decorators.jwt_decorator import require_auth
 
 @app.route("/create_client", methods=["POST"])
+@require_auth
 def create_client():
     try:
         create_client_request = CreateClientRequest(**request.get_json())
@@ -22,6 +24,7 @@ def create_client():
 
 
 @app.route("/get_client/<cpf>", methods=["GET"])
+@require_auth
 def get_client_by_cpf(cpf):
     try:
         client = client_usecase.GetClientByCPFUseCase.execute(cpf=cpf)
@@ -33,6 +36,7 @@ def get_client_by_cpf(cpf):
 
 
 @app.route("/get_clients/", methods=["GET"])
+@require_auth
 def get_clients():
     try:
         clients = client_usecase.GetAllClientsUseCase.execute()
